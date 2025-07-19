@@ -3,7 +3,8 @@ from sqlalchemy import select, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core import logger
+from core import logger, crypto_config
+from utils import Cryptor, Hasher
 from models.pg_models import Users
 from models.api_models import RequestUserRegistration
 from utils.custom_exception import (
@@ -47,6 +48,8 @@ class UsersBusinessModel:
         email: EmailStr | str,
         nickname: str,
     ) -> Users | None:
+        _, email_hash = self._get_email_as_secrets(email=email)
+
         query = await self._pg_session.execute(
             select(
                 Users,
@@ -54,7 +57,7 @@ class UsersBusinessModel:
             .where(
                 or_(
                     Users.nickname == nickname,
-                    Users.email == email,
+                    Users.email_hash == email_hash,
                 )
             )
         )
@@ -62,12 +65,27 @@ class UsersBusinessModel:
 
         return found_user
 
-    @staticmethod
-    def _create_new_user(data: RequestUserRegistration) -> Users:
+    def _create_new_user(self, data: RequestUserRegistration) -> Users:
+        email_enc, email_hash = self._get_email_as_secrets(email=data.email)
+
         return Users(
             nickname=data.nickname,
-            email=data.email,
-            password=data.password.get_secret_value(),
+            email_enc=email_enc,
+            email_hash=email_hash,
+            password_hash=data.password.get_secret_value(),  # TODO:
             first_name=data.first_name,
             last_name=data.last_name,
         )
+
+    @staticmethod
+    def _get_email_as_secrets(email: str | EmailStr) -> tuple[str, str]:
+        email_enc = Cryptor.encrypt_str(
+            str_=str(email),
+            password=crypto_config.email_master_password_bytes,
+        )
+        email_hash = Hasher.hash_str(
+            str_=email_enc,
+            password=crypto_config.email_master_password_bytes,
+        )
+
+        return email_enc, email_hash

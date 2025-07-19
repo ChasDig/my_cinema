@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 1b257d39610f
+Revision ID: 7b1627c2bae6
 Revises: 
-Create Date: 2025-07-19 16:06:49.214001
+Create Date: 2025-07-19 21:45:40.030150
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '1b257d39610f'
+revision: str = '7b1627c2bae6'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,16 +24,17 @@ def upgrade() -> None:
     op.execute("""CREATE SCHEMA IF NOT EXISTS users;""")
 
     op.create_table('users',
-                    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('nickname', sa.String(), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('password', sa.String(), nullable=False),
+    sa.Column('password_hash', sa.String(), nullable=False),
+    sa.Column('email_enc', sa.String(), nullable=False),
+    sa.Column('email_hash', sa.String(), nullable=False),
     sa.Column('first_name', sa.String(), nullable=True),
     sa.Column('last_name', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('email_hash'),
     sa.UniqueConstraint('nickname'),
     schema='users'
     )

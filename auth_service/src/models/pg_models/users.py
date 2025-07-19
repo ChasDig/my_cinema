@@ -8,8 +8,9 @@ class Users(Base, DatetimeStampedMixin):
     __table_args__ = {"schema": Schemas.users.name}
 
     nickname: Mapped[str] = mapped_column(nullable=False, unique=True)
-    email: Mapped[str] = mapped_column(nullable=False, unique=True)
-    password: Mapped[str] = mapped_column(nullable=False)
+    password_hash: Mapped[str] = mapped_column(nullable=False)
+    email_enc: Mapped[str] = mapped_column(nullable=False)
+    email_hash: Mapped[str] = mapped_column(nullable=False, unique=True)
 
     first_name: Mapped[str] = mapped_column(nullable=True)
     last_name: Mapped[str] = mapped_column(nullable=True)

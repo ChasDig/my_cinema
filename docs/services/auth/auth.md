@@ -28,8 +28,8 @@
 - - FastAPI: https://fastapi.tiangolo.com/;
 - - Pydantic: https://docs.pydantic.dev/latest/;
 - - Система авторизации JWT (JSON Web Token): https://datatracker.ietf.org/doc/html/rfc7519
-- - Хэширование данных: # TODO:
-- - Шифрование данных: # TODO:
+- Шифрование данных: # TODO:
+- Хеширование данных: # TODO:
 
 **AuthDB**:
 - Реляционная база данных для хранения основной информации по пользователям;

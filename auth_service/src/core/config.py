@@ -1,26 +1,18 @@
 import os
 import pathlib
 
+from dotenv import find_dotenv
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
-class Base(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=str(pathlib.Path(__file__).resolve().parents[3] / ".env"),
-        env_file_encoding="utf-8",
-    )
-
-    # Meta
-    service_name: str = "auth_service"
-    base_dir: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    log_format: str = "%(asctime)s - %(levelname)s - %(message)s"
+ENV_PATH = find_dotenv()
 
 
 class DBSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=str(pathlib.Path(__file__).resolve().parents[3] / ".env"),
+        env_file=ENV_PATH,
         env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     # PostgresDB
@@ -72,8 +64,37 @@ class DBSettings(BaseSettings):
         )
 
 
-class Settings(Base, DBSettings):
-    pass
+class CryptoSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=ENV_PATH,
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    length_hash: int = Field(default=32, alias="AUTH_LENGTH_HASH_PASSWORD")
+    count_iter: int = Field(default=100_000, alias="AUTH_COUNT_HASH_ITER")
+
+    email_master_password: str = Field(default="123", alias="AUTH_EMAIL_MASTER_PASSWORD")  # TODO:
+
+    @computed_field
+    @property
+    def email_master_password_bytes(self) -> bytes:
+        return bytes(self.email_master_password, "utf-8")
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=ENV_PATH,
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # Meta
+    service_name: str = "auth_service"
+    base_dir: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    log_format: str = "%(asctime)s - %(levelname)s - %(message)s"
 
 
 config = Settings()
+db_config = DBSettings()
+crypto_config = CryptoSettings()

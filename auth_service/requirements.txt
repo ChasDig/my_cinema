@@ -5,3 +5,4 @@ uvicorn==0.35.0
 sqlalchemy==2.0.41
 alembic==1.16.4
 asyncpg==0.30.0
+cryptography==45.0.5

@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 
-from core import config, logger, SingletonMeta
+from core import db_config, logger, SingletonMeta
 
 
 class AsyncSessionFactory(metaclass=SingletonMeta):
@@ -54,23 +54,23 @@ class AsyncSessionFactory(metaclass=SingletonMeta):
 
 
 URL_ = URL.create(
-    drivername=config.pg_drivername,
-    database=config.pg_database,
-    username=config.pg_username,
-    password=config.pg_password,
-    host=config.pg_host,
-    port=config.pg_port,
+    drivername=db_config.pg_drivername,
+    database=db_config.pg_database,
+    username=db_config.pg_username,
+    password=db_config.pg_password,
+    host=db_config.pg_host,
+    port=db_config.pg_port,
 )
 
 
 def create_sqlalchemy_async_engine(url: str | URL) -> AsyncEngine:
     return create_async_engine(
         url=url,
-        echo=config.pg_engine_echo,
-        pool_pre_ping=config.pg_engine_pool_pre_ping,
-        pool_recycle=config.pg_engine_pool_recycle,
-        pool_size=config.pg_engine_pool_size,
-        max_overflow=config.pg_engine_max_overflow,
+        echo=db_config.pg_engine_echo,
+        pool_pre_ping=db_config.pg_engine_pool_pre_ping,
+        pool_recycle=db_config.pg_engine_pool_recycle,
+        pool_size=db_config.pg_engine_pool_size,
+        max_overflow=db_config.pg_engine_max_overflow,
     )
 
 
