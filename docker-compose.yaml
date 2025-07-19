@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  auth_pg_db:
+    image: postgres:17.5
+    container_name: auth_pg_db
+    environment:
+      POSTGRES_DB: ${AUTH_POSTGRES_DB}
+      POSTGRES_USER: ${AUTH_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUTH_POSTGRES_PASSWORD}
+    volumes:
+      - ./db_volumes/auth_pg_db/:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 3
+    networks:
+      - sec_network
+
+networks:
+  sec_network:
+    driver: bridge

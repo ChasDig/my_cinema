@@ -36,3 +36,6 @@ pip-wheel-metadata/
 
 # VS Code
 .vscode/
+
+# Volumes
+.db_volumes/

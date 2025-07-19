@@ -1,0 +1,28 @@
+@startuml
+
+!define WEB_INTERFACE #FFA07A
+!define NGINX #FFD700
+!define AUTH #FFD700
+!define SERVICE #98FB98
+!define STORAGE #87CEEB
+
+rectangle "Client" as client {
+  component "Web-Interface" as web_interface WEB_INTERFACE
+}
+
+rectangle "Backend" as backend {
+  component "Nginx" as nginx NGINX
+  component "Auth_Service" as auth_service SERVICE
+
+  database "AuthDB (PostgreSQL)" as auth_db STORAGE
+  database "AuthTokenDB (Redis)" as auth_token_db STORAGE
+}
+
+web_interface -> nginx
+nginx -> auth_service
+auth_service -> auth_db
+auth_service -> auth_token_db
+auth_service -> nginx
+nginx -> web_interface
+
+@enduml
