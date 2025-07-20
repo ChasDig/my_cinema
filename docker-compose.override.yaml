@@ -1,4 +1,8 @@
 services:
   auth_pg_db:
     ports:
-      - "5432:5432"
+      - "${AUTH_POSTGRES_PORT}:5432"
+
+  auth_redis_db:
+    ports:
+      - "${AUTH_REDIS_PORT}:6379"

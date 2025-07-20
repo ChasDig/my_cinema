@@ -9,14 +9,36 @@ services:
       POSTGRES_USER: ${AUTH_POSTGRES_USER}
       POSTGRES_PASSWORD: ${AUTH_POSTGRES_PASSWORD}
     volumes:
-      - ./db_volumes/auth_pg_db/:/var/lib/postgresql/data
+      - auth_pg_db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
+      start_period: 10s
+      interval: 3s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - sec_network
+
+  auth_redis_db:
+    image: redis:7.2
+    container_name: auth_redis_db
+    volumes:
+      - auth_redis_db_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "${AUTH_REDIS_PORT}", "--raw", "-a", "${AUTH_REDIS_PASSWORD}", "ping" ]
+      start_period: 10s
       interval: 3s
       timeout: 3s
       retries: 3
     networks:
       - sec_network
+
+volumes:
+  auth_pg_db_data:
+  auth_redis_db_data:
 
 networks:
   sec_network:
