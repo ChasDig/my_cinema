@@ -1,1 +1,1 @@
-from .users_business_model import UsersBusinessModel
+from .users import UsersBusinessModel

@@ -35,9 +35,9 @@ class UsersBusinessModel:
             await self._pg_session.commit()
 
         except SQLAlchemyError as ex:
+            
             logger.error(
-                f"Error create User(nickname={registration_data.nickname}, "
-                f"email='{registration_data.email}'): {ex}"
+                f"Error create User(nickname={registration_data.nickname}: {ex}"
             )
             await self._pg_session.rollback()
 
@@ -48,7 +48,7 @@ class UsersBusinessModel:
         email: EmailStr | str,
         nickname: str,
     ) -> Users | None:
-        _, email_hash = self._get_email_as_secrets(email=email)
+        _, email_hash = self._get_emails_secrets(email=email)
 
         query = await self._pg_session.execute(
             select(
@@ -66,26 +66,30 @@ class UsersBusinessModel:
         return found_user
 
     def _create_new_user(self, data: RequestUserRegistration) -> Users:
-        email_enc, email_hash = self._get_email_as_secrets(email=data.email)
+        email_enc, email_hash = self._get_emails_secrets(email=data.email)
+        password_hash = Hasher.gen_password_hash(
+            password=data.password.get_secret_value()
+        )
 
-        return Users(
+        user = Users(
             nickname=data.nickname,
             email_enc=email_enc,
             email_hash=email_hash,
-            password_hash=data.password.get_secret_value(),  # TODO:
+            password_hash=password_hash,
             first_name=data.first_name,
             last_name=data.last_name,
         )
+        return user
 
     @staticmethod
-    def _get_email_as_secrets(email: str | EmailStr) -> tuple[str, str]:
+    def _get_emails_secrets(email: str | EmailStr) -> tuple[str, str]:
         email_enc = Cryptor.encrypt_str(
             str_=str(email),
-            password=crypto_config.email_master_password_bytes,
+            password=crypto_config.email_master_password,
         )
         email_hash = Hasher.hash_str(
             str_=email_enc,
-            password=crypto_config.email_master_password_bytes,
+            password=crypto_config.email_master_password,
         )
 
         return email_enc, email_hash

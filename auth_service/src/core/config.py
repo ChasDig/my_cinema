@@ -1,5 +1,4 @@
 import os
-import pathlib
 
 from dotenv import find_dotenv
 from pydantic import Field, computed_field
@@ -73,13 +72,14 @@ class CryptoSettings(BaseSettings):
 
     length_hash: int = Field(default=32, alias="AUTH_LENGTH_HASH_PASSWORD")
     count_iter: int = Field(default=100_000, alias="AUTH_COUNT_HASH_ITER")
+    salt_length_bytes: int = Field(default=16, alias="AUTH_SALT_BYTE_LENGTH")
+    nonce_length_bytes: int = Field(default=12, alias="AUTH_NONCE_BYTE_LENGTH")
 
-    email_master_password: str = Field(default="123", alias="AUTH_EMAIL_MASTER_PASSWORD")  # TODO:
-
-    @computed_field
-    @property
-    def email_master_password_bytes(self) -> bytes:
-        return bytes(self.email_master_password, "utf-8")
+    password_delimiter: str = Field(
+        default="$",
+        alias="AUTH_PASSWORD_DELIMITER",
+    )
+    email_master_password: str = Field(alias="AUTH_EMAIL_MASTER_PASSWORD")
 
 
 class Settings(BaseSettings):
