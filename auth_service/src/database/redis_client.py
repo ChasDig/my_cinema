@@ -3,6 +3,7 @@ import json
 from redis.asyncio import Redis
 
 from core import db_config, logger
+from utils.custom_exception import RedisError
 
 
 class RedisClient:
@@ -17,11 +18,21 @@ class RedisClient:
             decode_responses=True,
         )
 
-    async def set(self, key: str, value: str | dict[str, str | int]) -> None:
+    async def set(
+        self,
+        key: str,
+        value: str | dict[str, str | int],
+        ex = None,
+    ) -> None:
         if isinstance(value, dict):
             value = json.dumps(value)
 
-        await self._client.set(key, value)
+        try:
+            await self._client.set(key, value, ex=ex)
+
+        except Exception as ex:
+            logger.error(f"Error set data in Redis: {ex}")
+            raise RedisError()
 
     async def get(
         self,
@@ -40,4 +51,4 @@ class RedisClient:
         return value
 
 
-redis_client = RedisClient()
+redis_async_client = RedisClient()

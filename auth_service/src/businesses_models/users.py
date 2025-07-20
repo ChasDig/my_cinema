@@ -4,16 +4,22 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import logger, crypto_config
-from utils import Cryptor, Hasher
+from database.redis_client import RedisClient
+from utils import Cryptor, Hasher, Tokenizer
 from models.pg_models import Users
-from models.api_models import RequestUserRegistration
+from models.api_models import (
+    RequestUserRegistration,
+    RequestUserLoginData,
+    Tokens,
+)
 from utils.custom_exception import (
     UserAlreadyExistsError,
     SQLAlchemyErrorCommit,
+    UserLoginError,
 )
 
 
-class UsersBusinessModel:
+class UsersCreateBusinessModel:
 
     def __init__(self, pg_session: AsyncSession) -> None:
         self._pg_session = pg_session
@@ -37,7 +43,7 @@ class UsersBusinessModel:
         except SQLAlchemyError as ex:
             
             logger.error(
-                f"Error create User(nickname={registration_data.nickname}: {ex}"
+                f"Error create UserNickname={registration_data.nickname}: {ex}"
             )
             await self._pg_session.rollback()
 
@@ -93,3 +99,76 @@ class UsersBusinessModel:
         )
 
         return email_enc, email_hash
+
+
+class UsersLoginBusinessModel:
+
+    def __init__(self, pg_session: AsyncSession, redis_client: RedisClient):
+        self._pg_session = pg_session
+        self._redis_client = redis_client
+
+    async def login_user(
+        self,
+        login_data: RequestUserLoginData,
+        user_agent: str,
+    ) -> Tokens:
+        user: Users = await self._get_user_by_email(email=login_data.email)
+        await self._check_password_hash(
+            incoming_password=login_data.password.get_secret_value(),
+            user_hash_password=user.password_hash,
+        )
+
+        user_id = str(user.id)
+        tokens = Tokenizer.gen_tokens(user_id=user_id, user_agent=user_agent)
+        await self._redis_client.set(
+            key=tokens.access_token.type,
+            value=tokens.access_token.token,
+            ex=tokens.access_token.exp,
+        )
+        await self._redis_client.set(
+            key=tokens.refresh_token.type,
+            value=tokens.refresh_token.token,
+            ex=tokens.refresh_token.exp,
+        )
+
+        return tokens
+
+    async def _get_user_by_email(self, email: str | EmailStr) -> Users | None:
+        _, email_hash = self._get_emails_secrets(email=email)
+
+        query = await self._pg_session.execute(
+            select(
+                Users,
+            )
+            .where(
+                Users.email_hash == email_hash,
+            )
+        )
+        found_user = query.scalar_one_or_none()
+
+        if not found_user:
+            raise UserLoginError()
+
+        return found_user
+
+    @staticmethod
+    def _get_emails_secrets(email: str | EmailStr) -> tuple[str, str]:
+        email_enc = Cryptor.encrypt_str(
+            str_=str(email),
+            password=crypto_config.email_master_password,
+        )
+        email_hash = Hasher.hash_str(
+            str_=email_enc,
+            password=crypto_config.email_master_password,
+        )
+
+        return email_enc, email_hash
+
+    async def _check_password_hash( # TODO:
+        self,
+        incoming_password: str,
+        user_hash_password: str,
+    ) -> bool:
+        pass
+        # if not password_is_valid:
+        #     raise UserLoginError()

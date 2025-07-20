@@ -2,13 +2,7 @@ from pydantic import BaseModel, EmailStr, SecretStr, field_validator, Field
 from pydantic_core import PydanticCustomError
 
 
-class RequestUserRegistration(BaseModel):
-    nickname: str = Field(examples=["Dart Vader"])
-    email: EmailStr = Field(examples=["dart_vaider@gmail.com"])
-    password: SecretStr = Field(examples=["DartVaderPassword123!"])
-
-    first_name: str | None = Field(default=None, examples=["Dart"])
-    last_name: str | None = Field(default=None, examples=["Vader"])
+class PasswordCheckerMixin:
 
     @field_validator("password", mode="after")
     @classmethod
@@ -37,3 +31,17 @@ class RequestUserRegistration(BaseModel):
             )
 
         return value
+
+
+class RequestUserRegistration(BaseModel, PasswordCheckerMixin):
+    nickname: str = Field(examples=["Dart Vader"])
+    email: EmailStr = Field(examples=["dart_vaider@gmail.com"])
+    password: SecretStr = Field(examples=["DartVaderPassword123!"])
+
+    first_name: str | None = Field(default=None, examples=["Dart"])
+    last_name: str | None = Field(default=None, examples=["Vader"])
+
+
+class RequestUserLoginData(BaseModel, PasswordCheckerMixin):
+    email: EmailStr = Field(examples=["dart_vaider@gmail.com"])
+    password: SecretStr = Field(examples=["DartVaderPassword123!"])
