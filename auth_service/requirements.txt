@@ -7,3 +7,4 @@ alembic==1.16.4
 asyncpg==0.30.0
 cryptography==45.0.5
 redis==6.2.0
+python-jose==3.5.0

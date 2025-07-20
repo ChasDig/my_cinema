@@ -85,6 +85,17 @@ class CryptoSettings(BaseSettings):
     salt_length_bytes: int = Field(default=16, alias="AUTH_SALT_BYTE_LENGTH")
     nonce_length_bytes: int = Field(default=12, alias="AUTH_NONCE_BYTE_LENGTH")
 
+    token_secret: str = Field(alias="AUTH_TOKEN_SECRET")
+    access_token_exp_min: int = Field(
+        default=30,
+        alias="AUTH_ACCESS_TOKEN_EXP_MIN",
+    )
+    refresh_token_exp_days: int = Field(
+        default=7,
+        alias="AUTH_REFRESH_TOKEN_EXP_DAYS",
+    )
+    token_algorithm: str = Field(default="HS256")
+
     password_delimiter: str = Field(
         default="$",
         alias="AUTH_PASSWORD_DELIMITER",
