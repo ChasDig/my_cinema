@@ -11,7 +11,7 @@ class TokenPayload(BaseModel):
 
 class TokenInfo(BaseModel):
     type: str
-    exp: float
+    ttl: int
     token: str
 
 

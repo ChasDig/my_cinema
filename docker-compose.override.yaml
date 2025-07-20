@@ -6,3 +6,5 @@ services:
   auth_redis_db:
     ports:
       - "${AUTH_REDIS_PORT}:6379"
+    expose:
+      - "${AUTH_REDIS_PORT}"

@@ -10,7 +10,6 @@ class RedisClient:
 
     def __init__(self) -> None:
         self._client = Redis(
-            username=db_config.redis_username,
             password=db_config.redis_password,
             db=db_config.redis_auth_db,
             host=db_config.redis_host,
@@ -22,13 +21,13 @@ class RedisClient:
         self,
         key: str,
         value: str | dict[str, str | int],
-        ex = None,
+        ttl: int = None,
     ) -> None:
         if isinstance(value, dict):
             value = json.dumps(value)
 
         try:
-            await self._client.set(key, value, ex=ex)
+            await self._client.set(key, value, ex=ttl)
 
         except Exception as ex:
             logger.error(f"Error set data in Redis: {ex}")
@@ -51,4 +50,5 @@ class RedisClient:
         return value
 
 
-redis_async_client = RedisClient()
+async def get_redis_client() -> RedisClient:
+    return RedisClient()

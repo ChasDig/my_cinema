@@ -63,10 +63,6 @@ class DBSettings(BaseSettings):
         )
 
     # RedisDB
-    redis_username: str = Field(
-        default="auth_service",
-        alias="AUTH_REDIS_USERNAME",
-    )
     redis_password: str = Field(alias="AUTH_REDIS_PASSWORD")
     redis_auth_db: int = Field(default=0, alias="AUTH_REDIS_DB")
     redis_host: str = Field(default="127.0.0.1", alias="AUTH_REDIS_HOST")

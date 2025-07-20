@@ -3,7 +3,7 @@ from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Body, Response, Depends, status
 
-from database import get_pg_session, redis_async_client
+from database import get_pg_session, get_redis_client
 from businesses_models import (
     UsersCreateBusinessModel,
     UsersLoginBusinessModel,
@@ -53,7 +53,7 @@ async def login(
     ],
     user_agent: str = Depends(get_user_agent),
     pg_session: AsyncSession = Depends(get_pg_session),
-    redis_client: RedisClient = Depends(redis_async_client),
+    redis_client: RedisClient = Depends(get_redis_client),
 ):
     business_model = UsersLoginBusinessModel(
         pg_session=pg_session,

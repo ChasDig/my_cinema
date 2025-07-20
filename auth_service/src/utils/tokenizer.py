@@ -46,7 +46,7 @@ class Tokenizer:
         return Tokens(
             access_token=TokenInfo(
                 type=TokenType.access.name,
-                exp=access_exp,
+                ttl=int(access_exp - now_.timestamp()),
                 token=cls.gen_token(
                     type_=TokenType.access.name,
                     now_=now_,
@@ -57,7 +57,7 @@ class Tokenizer:
             ),
             refresh_token=TokenInfo(
                 type=TokenType.refresh.name,
-                exp=refresh_exp,
+                ttl=int(refresh_exp - now_.timestamp()),
                 token=cls.gen_token(
                     type_=TokenType.refresh.name,
                     now_=now_,

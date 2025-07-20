@@ -94,7 +94,7 @@ class UsersCreateBusinessModel:
             password=crypto_config.email_master_password,
         )
         email_hash = Hasher.hash_str(
-            str_=email_enc,
+            str_=str(email),
             password=crypto_config.email_master_password,
         )
 
@@ -123,18 +123,21 @@ class UsersLoginBusinessModel:
         await self._redis_client.set(
             key=tokens.access_token.type,
             value=tokens.access_token.token,
-            ex=tokens.access_token.exp,
+            ttl=tokens.access_token.ttl,
         )
         await self._redis_client.set(
             key=tokens.refresh_token.type,
             value=tokens.refresh_token.token,
-            ex=tokens.refresh_token.exp,
+            ttl=tokens.refresh_token.ttl,
         )
 
         return tokens
 
     async def _get_user_by_email(self, email: str | EmailStr) -> Users | None:
-        _, email_hash = self._get_emails_secrets(email=email)
+        email_hash = Hasher.hash_str(
+            str_=email,
+            password=crypto_config.email_master_password,
+        )
 
         query = await self._pg_session.execute(
             select(
@@ -144,31 +147,16 @@ class UsersLoginBusinessModel:
                 Users.email_hash == email_hash,
             )
         )
-        found_user = query.scalar_one_or_none()
+        if found_user := query.scalar_one_or_none():
+            return found_user
 
-        if not found_user:
-            raise UserLoginError()
-
-        return found_user
-
-    @staticmethod
-    def _get_emails_secrets(email: str | EmailStr) -> tuple[str, str]:
-        email_enc = Cryptor.encrypt_str(
-            str_=str(email),
-            password=crypto_config.email_master_password,
-        )
-        email_hash = Hasher.hash_str(
-            str_=email_enc,
-            password=crypto_config.email_master_password,
-        )
-
-        return email_enc, email_hash
+        raise UserLoginError()
 
     async def _check_password_hash( # TODO:
         self,
         incoming_password: str,
         user_hash_password: str,
     ) -> bool:
-        pass
+        return True
         # if not password_is_valid:
         #     raise UserLoginError()

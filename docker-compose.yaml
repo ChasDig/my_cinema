@@ -25,7 +25,7 @@ services:
     container_name: auth_redis_db
     volumes:
       - auth_redis_db_data:/data
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--port", "${AUTH_REDIS_PORT}", "--requirepass", "${AUTH_REDIS_PASSWORD}"]
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "redis-cli", "-p", "${AUTH_REDIS_PORT}", "--raw", "-a", "${AUTH_REDIS_PASSWORD}", "ping" ]

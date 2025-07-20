@@ -25,13 +25,11 @@ class Cryptor:
     def decrypt_str(str_: str, password: str) -> str:
         decoded = base64.b64decode(str_.encode())
 
-        nonce_s, nonce_e = (
-            crypto_config.salt_length_bytes,
-            crypto_config.nonce_length_bytes,
-        )
-        nonce = decoded[nonce_s:nonce_e]
-        salt = decoded[:crypto_config.salt_length_bytes]
-        ciphertext = decoded[crypto_config.nonce_length_bytes:]
+        salt_len = crypto_config.salt_length_bytes
+        nonce_len = crypto_config.nonce_length_bytes
+        salt = decoded[:salt_len]
+        nonce = decoded[salt_len: salt_len + nonce_len]
+        ciphertext = decoded[salt_len + nonce_len:]
 
         key = Hasher.gen_driver_key(password=password, salt=salt)
         aes_gcm = AESGCM(key)
