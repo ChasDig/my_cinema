@@ -117,16 +117,18 @@ class UsersLoginBusinessModel:
             incoming_password=login_data.password.get_secret_value(),
             user_hash_password=user.password_hash,
         )
-
+        # user_uid.user_agent.type_token: token
+        # user_uid.user_agent. *
+        # user_uid. *
         user_id = str(user.id)
         tokens = Tokenizer.gen_tokens(user_id=user_id, user_agent=user_agent)
         await self._redis_client.set(
-            key=tokens.access_token.type,
+            key=tokens.access_token.type,  # TODO:
             value=tokens.access_token.token,
             ttl=tokens.access_token.ttl,
         )
         await self._redis_client.set(
-            key=tokens.refresh_token.type,
+            key=tokens.refresh_token.type,  # TODO:
             value=tokens.refresh_token.token,
             ttl=tokens.refresh_token.ttl,
         )
