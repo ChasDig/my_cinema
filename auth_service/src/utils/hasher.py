@@ -25,18 +25,47 @@ class Hasher:
         return kdf.derive(password.encode())
 
     @classmethod
-    def gen_password_hash(cls, password: str, salt: bytes = None) -> str:
+    def gen_password_hash(
+        cls,
+        password: str,
+        salt: bytes = None,
+        count_iter: int = None,
+    ) -> str:
         if not salt:
             salt = os.urandom(crypto_config.salt_length_bytes)
+
+        if not count_iter:
+            count_iter = crypto_config.count_iter
 
         password_hash = cls.gen_driver_key(password=password, salt=salt)
 
         return cls.password_template.format(
-            iter=crypto_config.count_iter,
+            iter=count_iter,
             delimiter=crypto_config.password_delimiter,
             salt=base64.b64encode(salt).decode(),
             password_hash_str=base64.b64encode(password_hash).decode(),
         )
+
+    @classmethod
+    def check_password_by_hash(
+        cls,
+        incoming_password: str,
+        user_hash_password: str,
+        password_delimiter: str = None,
+    ):
+        if password_delimiter is None:
+            password_delimiter = crypto_config.password_delimiter
+
+        count_iter, salt, hash_password = user_hash_password.split(
+            password_delimiter,
+        )
+        incoming_hash_password = cls.gen_password_hash(
+            password=incoming_password,
+            count_iter=int(count_iter),
+            salt=base64.b64decode(salt),
+        )
+
+        return True if user_hash_password == incoming_hash_password else False
 
     @staticmethod
     def hash_str(str_: str, password: str) -> str:

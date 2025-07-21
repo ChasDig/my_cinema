@@ -113,22 +113,28 @@ class UsersLoginBusinessModel:
         user_agent: str,
     ) -> Tokens:
         user: Users = await self._get_user_by_email(email=login_data.email)
-        await self._check_password_hash(
+        await self._check_password_by_hash(
             incoming_password=login_data.password.get_secret_value(),
             user_hash_password=user.password_hash,
         )
-        # user_uid.user_agent.type_token: token
-        # user_uid.user_agent. *
-        # user_uid. *
+
         user_id = str(user.id)
         tokens = Tokenizer.gen_tokens(user_id=user_id, user_agent=user_agent)
         await self._redis_client.set(
-            key=tokens.access_token.type,  # TODO:
+            key=Tokenizer.token_key_template.format(
+                user_id=user_id,
+                user_agent=user_agent,
+                token_type=tokens.access_token.type,
+            ),
             value=tokens.access_token.token,
             ttl=tokens.access_token.ttl,
         )
         await self._redis_client.set(
-            key=tokens.refresh_token.type,  # TODO:
+            key=Tokenizer.token_key_template.format(
+                user_id=user_id,
+                user_agent=user_agent,
+                token_type=tokens.refresh_token.type,
+            ),
             value=tokens.refresh_token.token,
             ttl=tokens.refresh_token.ttl,
         )
@@ -154,11 +160,13 @@ class UsersLoginBusinessModel:
 
         raise UserLoginError()
 
-    async def _check_password_hash( # TODO:
-        self,
+    @staticmethod
+    async def _check_password_by_hash(
         incoming_password: str,
         user_hash_password: str,
-    ) -> bool:
-        return True
-        # if not password_is_valid:
-        #     raise UserLoginError()
+    ) -> None:
+        if not Hasher.check_password_by_hash(
+            incoming_password=incoming_password,
+            user_hash_password=user_hash_password,
+        ):
+            raise UserLoginError(detail="Not correct user email or password")

@@ -9,6 +9,7 @@ from models.api_models import TokenPayload, TokenInfo, Tokens
 
 class Tokenizer:
     header = {"algorithm": crypto_config.token_algorithm, "type": "JWT"}
+    token_key_template = "{user_id}.{user_agent}.{token_type}"
 
     @classmethod
     def gen_token(
