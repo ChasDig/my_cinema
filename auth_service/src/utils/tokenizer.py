@@ -1,6 +1,8 @@
 from datetime import datetime, UTC, timedelta
+from typing import Any
 
-from jose import jwt
+from jose import jwt, JWTError
+from fastapi import HTTPException, status
 
 from core import crypto_config
 from models.enums import TokenType
@@ -68,3 +70,18 @@ class Tokenizer:
                 ),
             ),
         )
+
+    @staticmethod
+    def decode_token(token: str) -> dict[str, Any]:
+        try:
+            return jwt.decode(
+                token=token,
+                key = crypto_config.token_secret,
+                algorithms=[crypto_config.token_algorithm],
+            )
+
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token, please login again",
+            )

@@ -2,6 +2,7 @@ from pydantic import EmailStr
 from sqlalchemy import select, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import status, HTTPException
 
 from core import logger, crypto_config
 from database.redis_client import RedisClient
@@ -15,7 +16,7 @@ from models.api_models import (
 from utils.custom_exception import (
     UserAlreadyExistsError,
     SQLAlchemyErrorCommit,
-    UserLoginError,
+    UserNotFoundError,
 )
 
 
@@ -158,7 +159,7 @@ class UsersLoginBusinessModel:
         if found_user := query.scalar_one_or_none():
             return found_user
 
-        raise UserLoginError()
+        raise UserNotFoundError()
 
     @staticmethod
     async def _check_password_by_hash(
@@ -169,4 +170,56 @@ class UsersLoginBusinessModel:
             incoming_password=incoming_password,
             user_hash_password=user_hash_password,
         ):
-            raise UserLoginError(detail="Not correct user email or password")
+            raise UserNotFoundError(
+                detail="Not correct user email or password",
+            )
+
+
+class UsersRefreshBusinessModel:
+
+    def __init__(self, pg_session: AsyncSession, redis_client: RedisClient):
+        self._pg_session = pg_session
+        self._redis_client = redis_client
+
+    async def check_and_refresh(
+        self,
+        refresh_token: str,
+        user_agent: str,
+    ) -> Tokens:
+        refresh_token_payload = Tokenizer.decode_token(token=refresh_token)
+
+        try:
+            user: Users = await self._get_user_by_id(
+                id_=refresh_token_payload["sub"],
+            )
+
+            if not user or user_agent != refresh_token_payload["user_agent"]:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token, please login again",
+                )
+
+        except KeyError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token, please login again",
+            )
+
+        return Tokenizer.gen_tokens(
+            user_id=str(user.id),
+            user_agent=user_agent,
+        )
+
+    async def _get_user_by_id(self, id_: str) -> Users | None:
+        query = await self._pg_session.execute(
+            select(
+                Users,
+            )
+            .where(
+                Users.id == id_,
+            )
+        )
+        if found_user := query.scalar_one_or_none():
+            return found_user
+
+        raise UserNotFoundError()

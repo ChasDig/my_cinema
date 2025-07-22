@@ -1,24 +1,35 @@
 from typing import Annotated
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Body, Response, Depends, status
+from fastapi import (
+    APIRouter,
+    Body,
+    Response,
+    Depends,
+    status,
+    Cookie,
+    HTTPException,
+)
 
 from database import get_pg_session, get_redis_client
 from businesses_models import (
     UsersCreateBusinessModel,
     UsersLoginBusinessModel,
+    UsersRefreshBusinessModel,
 )
 from database.redis_client import RedisClient
 from depends import get_user_agent
 from models.api_models import (
     RequestUserRegistration,
     RequestUserLoginData,
-    Tokens,
+    Tokens, TokenInfo,
 )
+from models.enums import TokenType
+
 
 router = APIRouter(
-    prefix="/users",
-    tags=["users"],
+    prefix="/auth",
+    tags=["auth"],
 )
 
 
@@ -44,13 +55,14 @@ async def registration(
 @router.post(
     "/login",
     status_code=status.HTTP_200_OK,
-    response_model=Tokens,
+    response_model=TokenInfo,
 )
 async def login(
     login_data: Annotated[
         RequestUserLoginData,
         Body(),
     ],
+    response: Response,
     user_agent: str = Depends(get_user_agent),
     pg_session: AsyncSession = Depends(get_pg_session),
     redis_client: RedisClient = Depends(get_redis_client),
@@ -60,7 +72,54 @@ async def login(
         redis_client=redis_client,
     )
 
-    return await business_model.login_user(
+    tokens = await business_model.login_user(
         login_data=login_data,
         user_agent=user_agent,
     )
+    response.set_cookie(
+        key=TokenType.refresh.name,
+        value=tokens.refresh_token.token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+    )
+
+    return tokens.access_token
+
+@router.post(
+    "/refresh",
+    status_code=status.HTTP_200_OK,
+    response_model=TokenInfo,
+)
+async def login(
+    response: Response,
+    user_agent: str = Depends(get_user_agent),
+    refresh_token: str = Cookie(None, alias="RefreshToken"),
+    redis_client: RedisClient = Depends(get_redis_client),
+    pg_session: AsyncSession = Depends(get_pg_session),
+):
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing RefreshToken",
+        )
+
+    business_model = UsersRefreshBusinessModel(
+        redis_client=redis_client,
+        pg_session=pg_session,
+    )
+    tokens: Tokens = await business_model.check_and_refresh(
+        refresh_token=refresh_token,
+        user_agent=user_agent,
+    )
+
+    response.set_cookie(
+        key=TokenType.refresh.name,
+        value=tokens.refresh_token.token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+    )
+
+    return tokens.access_token
+

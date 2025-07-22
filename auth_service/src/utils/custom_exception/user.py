@@ -10,7 +10,7 @@ class UserAlreadyExistsError(HTTPException):
         )
 
 
-class UserLoginError(HTTPException):
+class UserNotFoundError(HTTPException):
 
     def __init__(self, detail: str = "User not found") -> None:
         super().__init__(
