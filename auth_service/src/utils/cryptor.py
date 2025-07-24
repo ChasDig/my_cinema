@@ -8,9 +8,21 @@ from utils.hasher import Hasher
 
 
 class Cryptor:
+    """Utils - шифрование данных."""
 
     @staticmethod
     def encrypt_str(str_: str, password: str) -> str:
+        """
+        Шифрование строки.
+
+        @type str_: str
+        @param str_:
+        @type password: str
+        @param password: Мастер-пароль (в открытом виде).
+
+        @rtype: str
+        @return:
+        """
         salt = os.urandom(crypto_config.salt_length_bytes)
         nonce = os.urandom(crypto_config.nonce_length_bytes)
         key = Hasher.gen_driver_key(password=password, salt=salt)
@@ -23,6 +35,17 @@ class Cryptor:
 
     @staticmethod
     def decrypt_str(str_: str, password: str) -> str:
+        """
+        Расшифровывание строки.
+
+        @type str_: str
+        @param str_:
+        @type password: str
+        @param password: Мастер-пароль (в открытом виде).
+
+        @rtype: str
+        @return:
+        """
         decoded = base64.b64decode(str_.encode())
 
         salt_len = crypto_config.salt_length_bytes

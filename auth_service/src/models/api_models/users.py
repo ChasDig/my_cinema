@@ -3,12 +3,13 @@ from pydantic_core import PydanticCustomError
 
 
 class PasswordCheckerMixin:
+    """Mixin - проверка пароля."""
 
     @field_validator("password", mode="after")
     @classmethod
     def check_password(cls, value: SecretStr) -> SecretStr:
         """
-        Check user password.
+        Валидация пароля пользователя.
 
         @type value: SecretStr
         @param value:
@@ -34,6 +35,8 @@ class PasswordCheckerMixin:
 
 
 class RequestUserRegistration(BaseModel, PasswordCheckerMixin):
+    """Request модель данных - регистрация пользователя."""
+
     nickname: str = Field(examples=["Dart Vader"])
     email: EmailStr = Field(examples=["dart_vaider@gmail.com"])
     password: SecretStr = Field(examples=["DartVaderPassword123!"])
@@ -43,5 +46,7 @@ class RequestUserRegistration(BaseModel, PasswordCheckerMixin):
 
 
 class RequestUserLoginData(BaseModel, PasswordCheckerMixin):
+    """Request модель данных - авторизация пользователя."""
+
     email: EmailStr = Field(examples=["dart_vaider@gmail.com"])
     password: SecretStr = Field(examples=["DartVaderPassword123!"])

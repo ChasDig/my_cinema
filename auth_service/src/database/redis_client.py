@@ -7,6 +7,7 @@ from utils.custom_exception import RedisError
 
 
 class RedisClient:
+    """Асинхронный клиент Redis."""
 
     def __init__(self) -> None:
         self._client = Redis(
@@ -21,8 +22,21 @@ class RedisClient:
         self,
         key: str,
         value: str | dict[str, str | int],
-        ttl: int = None,
+        ttl: int | None = None,
     ) -> None:
+        """
+        Прослойка - вставка значений в Redis.
+
+        @type key: str
+        @param key:
+        @type value: str | dict[str, str | int]
+        @param value:
+        @type ttl: int | None
+        @param ttl:
+
+        @rtype: None
+        @return:
+        """
         if isinstance(value, dict):
             value = json.dumps(value)
 
@@ -37,7 +51,18 @@ class RedisClient:
         self,
         key: str,
         as_dict: bool = False,
-    ) -> dict[str, str | int] | str:
+    ) -> dict[str, str | int] | str | None:
+        """
+        Прослойка - получение значений из Redis.
+
+        @type key: str
+        @param key:
+        @type as_dict: bool
+        @param as_dict: Флаг - получаемые значения требуется сериализовать.
+
+        @rtype value: dict[str, str | int] | str | None
+        @return value:
+        """
         value = await self._client.get(key)
 
         if as_dict:
@@ -51,4 +76,10 @@ class RedisClient:
 
 
 async def get_redis_client() -> RedisClient:
+    """
+    Получение(инициализация) клиента Redis.
+
+    @rtype: RedisClient
+    @return:
+    """
     return RedisClient()

@@ -8,6 +8,8 @@ ENV_PATH = find_dotenv()
 
 
 class DBSettings(BaseSettings):
+    """Конфигурации - Базы Данных."""
+
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
         env_file_encoding="utf-8",
@@ -70,6 +72,8 @@ class DBSettings(BaseSettings):
 
 
 class CryptoSettings(BaseSettings):
+    """Конфигурации - чувствительные данные (шифрование/хеширование)."""
+
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
         env_file_encoding="utf-8",
@@ -100,6 +104,7 @@ class CryptoSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
+    """Конфигурации - базовые."""
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
         env_file_encoding="utf-8",

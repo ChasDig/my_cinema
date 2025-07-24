@@ -6,6 +6,12 @@ from core import config
 
 
 def get_logger() -> logging.Logger:
+    """
+    Получение Logger-а.
+
+    @rtype logger_: logging.Logger
+    @return logger_: Access-токен.
+    """
     logger_ = logging.getLogger()
     logger_.setLevel(logging.DEBUG)
 

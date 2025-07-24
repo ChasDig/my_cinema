@@ -44,8 +44,19 @@ async def registration(
     ],
     pg_session: AsyncSession = Depends(get_pg_session),
 ) -> Response:
+    """
+    Регистрация пользователя.
+
+    @type registration_data: Annotated[RequestUserRegistration, Body()]
+    @param registration_data: Данные пользователя.
+    @type pg_session: AsyncSession
+    @param pg_session: Сессия с БД Postgres через Depends.
+
+    @rtype: Response
+    @return:
+    """
     business_model = UsersCreateBusinessModel(pg_session=pg_session)
-    await business_model.registration_user(registration_data)
+    await business_model.execute(registration_data)
 
     return Response(
         status_code=status.HTTP_201_CREATED,
@@ -66,13 +77,32 @@ async def login(
     user_agent: str = Depends(get_user_agent),
     pg_session: AsyncSession = Depends(get_pg_session),
     redis_client: RedisClient = Depends(get_redis_client),
-):
+) -> TokenInfo:
+    """
+    Авторизация пользователя.
+    Refresh-токен - добавляется в Cookies.
+    Access-токен - возвращается в теле ответа.
+
+    @type login_data: Annotated[RequestUserLoginData, Body()]
+    @param login_data: Данные авторизации.
+    @type response: Response
+    @param response:
+    @type user_agent: str
+    @param user_agent: User-Agent из заголовка через Depends.
+    @type pg_session: AsyncSession
+    @param pg_session: Сессия с БД Postgres через Depends.
+    @type redis_client: RedisClient
+    @param redis_client: Клиент Redis через Depends.
+
+    @rtype: TokenInfo
+    @return: Access-токен.
+    """
     business_model = UsersLoginBusinessModel(
         pg_session=pg_session,
         redis_client=redis_client,
     )
 
-    tokens = await business_model.login_user(
+    tokens = await business_model.execute(
         login_data=login_data,
         user_agent=user_agent,
     )
@@ -97,7 +127,26 @@ async def login(
     refresh_token: str = Cookie(None, alias="RefreshToken"),
     redis_client: RedisClient = Depends(get_redis_client),
     pg_session: AsyncSession = Depends(get_pg_session),
-):
+) -> TokenInfo:
+    """
+    Обновление токенов пользователя.
+    Refresh-токен - добавляется в Cookies.
+    Access-токен - возвращается в теле ответа.
+
+    @type response: Response
+    @param response:
+    @type user_agent: str
+    @param user_agent: User-Agent из заголовка через Depends.
+    @type refresh_token: str
+    @param refresh_token: Refresh-токен, полученный и Cookie.
+    @type pg_session: AsyncSession
+    @param pg_session: Сессия с БД Postgres через Depends.
+    @type redis_client: RedisClient
+    @param redis_client: Клиент Redis через Depends.
+
+    @rtype: TokenInfo
+    @return: Access-токен.
+    """
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -108,7 +157,7 @@ async def login(
         redis_client=redis_client,
         pg_session=pg_session,
     )
-    tokens: Tokens = await business_model.check_and_refresh(
+    tokens: Tokens = await business_model.execute(
         refresh_token=refresh_token,
         user_agent=user_agent,
     )
@@ -122,4 +171,3 @@ async def login(
     )
 
     return tokens.access_token
-

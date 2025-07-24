@@ -4,6 +4,8 @@ from .base import Base, DatetimeStampedMixin, Schemas
 
 
 class Users(Base, DatetimeStampedMixin):
+    """Postgres модель - Пользователи."""
+
     __tablename__ = "users"
     __table_args__ = {"schema": Schemas.users.name}
 

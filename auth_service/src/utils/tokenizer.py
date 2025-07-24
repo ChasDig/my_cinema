@@ -10,6 +10,8 @@ from models.api_models import TokenPayload, TokenInfo, Tokens
 
 
 class Tokenizer:
+    """Utils - работа с токенами пользователя."""
+
     header = {"algorithm": crypto_config.token_algorithm, "type": "JWT"}
     token_key_template = "{user_id}.{user_agent}.{token_type}"
 
@@ -22,6 +24,23 @@ class Tokenizer:
         sub: str,
         user_agent: str,
     ) -> str:
+        """
+        Генерация токена.
+
+        @type type_: str
+        @param type_: Тип токена.
+        @type now_: datetime
+        @param now_: Дата и время создания.
+        @type exp_: float
+        @param exp_: TTL timestamp.
+        @type sub: str
+        @param sub: ID Пользователя.
+        @type user_agent: str
+        @param user_agent:
+
+        @rtype: str
+        @return:
+        """
         payload = TokenPayload(
             type=type_,
             iat=now_.timestamp(),
@@ -38,6 +57,17 @@ class Tokenizer:
 
     @classmethod
     def gen_tokens(cls, user_id: str, user_agent: str) -> Tokens:
+        """
+        Генерация токенов.
+
+        @type user_id: str
+        @param user_id: ID Пользователя.
+        @type user_agent: str
+        @param user_agent:
+
+        @rtype: Tokens
+        @return:
+        """
         now_ = datetime.now(UTC)
         access_exp = (
             now_ + timedelta(minutes=crypto_config.access_token_exp_min)
@@ -73,6 +103,15 @@ class Tokenizer:
 
     @staticmethod
     def decode_token(token: str) -> dict[str, Any]:
+        """
+        Получение данных из токена.
+
+        @type token: str
+        @param token:
+
+        @rtype: dict[str, Any]
+        @return:
+        """
         try:
             return jwt.decode(
                 token=token,
