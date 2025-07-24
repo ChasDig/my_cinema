@@ -1,9 +1,24 @@
 version: '3.9'
 
 services:
+  auth_service:
+    build: ./auth_service
+    container_name: auth_service
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      auth_pg_db:
+        condition: service_healthy
+      auth_redis_db:
+        condition: service_healthy
+    networks:
+      - sec_network
+
   auth_pg_db:
     image: postgres:17.5
     container_name: auth_pg_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${AUTH_POSTGRES_DB}
       POSTGRES_USER: ${AUTH_POSTGRES_USER}
@@ -11,22 +26,23 @@ services:
     volumes:
       - auth_pg_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_POSTGRES_USER}"]
       start_period: 10s
       interval: 3s
       timeout: 3s
       retries: 3
-    restart: unless-stopped
     networks:
       - sec_network
 
   auth_redis_db:
     image: redis:7.2
     container_name: auth_redis_db
+    restart: unless-stopped
     volumes:
       - auth_redis_db_data:/data
+    environment:
+      REDIS_PASSWORD: ${AUTH_REDIS_PASSWORD}
     command: ["redis-server", "--port", "${AUTH_REDIS_PORT}", "--requirepass", "${AUTH_REDIS_PASSWORD}"]
-    restart: unless-stopped
     healthcheck:
       test: [ "CMD", "redis-cli", "-p", "${AUTH_REDIS_PORT}", "--raw", "-a", "${AUTH_REDIS_PASSWORD}", "ping" ]
       start_period: 10s

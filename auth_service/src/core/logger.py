@@ -1,3 +1,4 @@
+import pathlib
 import logging
 
 __all__ = ["logger"]
@@ -14,8 +15,9 @@ def get_logger() -> logging.Logger:
     """
     logger_ = logging.getLogger()
     logger_.setLevel(logging.DEBUG)
-
     console_handler = logging.StreamHandler()
+
+    pathlib.Path(f"{config.base_dir}/logs/").mkdir(exist_ok=True)
     file_handler = logging.FileHandler(f"{config.base_dir}/logs/app.log")
     formatter = logging.Formatter(config.log_format)
 

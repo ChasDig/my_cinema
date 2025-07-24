@@ -94,7 +94,7 @@ class CryptoSettings(BaseSettings):
         default=7,
         alias="AUTH_REFRESH_TOKEN_EXP_DAYS",
     )
-    token_algorithm: str = Field(default="HS256")
+    token_algorithm: str = Field(default="HS256", alias="AUTH_TOKEN_ALGORITHM")
 
     password_delimiter: str = Field(
         default="$",
