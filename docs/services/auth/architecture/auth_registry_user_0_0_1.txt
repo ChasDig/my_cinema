@@ -1,0 +1,18 @@
+@startuml Voice assistant
+
+actor Client as client
+participant "Auth Service" as auth_service
+participant "Postgres DB" as postgres_db
+
+client -> auth_service : Request(HTTP): POST /users (Запрос: регистрация/создание пользователя)
+auth_service -> postgres_db : SQL-запрос: проверка существования пользователя
+
+alt Case: Пользователь найден в системе
+    postgres_db -> auth_service : SQL-ответ: пользователь существует в системе
+    auth_service -> client : Response(HTTP): POST /users (Ответ: пользователь существует в системе)
+else Case: Пользователь не найден в системе
+    postgres_db -> auth_service : SQL-ответ: пользователь не существует в системе
+    auth_service -> client : Response(HTTP): POST /users (Ответ: пользователь зарегистрирован/создан)
+end
+
+@enduml

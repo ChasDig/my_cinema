@@ -1,0 +1,14 @@
+services:
+  auth_service:
+    ports:
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
+
+  auth_pg_db:
+    ports:
+      - "${AUTH_POSTGRES_PORT}:5432"
+
+  auth_redis_db:
+    ports:
+      - "${AUTH_REDIS_PORT}:6379"
+    expose:
+      - "${AUTH_REDIS_PORT}"
