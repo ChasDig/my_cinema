@@ -1,12 +1,30 @@
 version: '3.9'
 
 services:
+  nginx:
+    build: ./nginx
+    container_name: nginx_cinema
+    ports:
+      - "${NGINX_PORT}:${NGINX_PORT}"
+    env_file: .env
+    environment:
+      AUTH_SERVICE_HOST: auth_service
+      AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
+    volumes:
+      - ./nginx/static:/usr/share/nginx/static:ro  # Статика(read-only)
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro  # Конфиги базовые
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro  # Конфиги для сервисов
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - auth_service
+    networks:
+      - sec_network
+
   auth_service:
     build: ./auth_service
     container_name: auth_service
     restart: unless-stopped
-    env_file:
-      - .env
+    env_file: .env
     depends_on:
       auth_pg_db:
         condition: service_healthy
@@ -19,6 +37,7 @@ services:
     image: postgres:17.5
     container_name: auth_pg_db
     restart: unless-stopped
+    env_file: .env
     environment:
       POSTGRES_DB: ${AUTH_POSTGRES_DB}
       POSTGRES_USER: ${AUTH_POSTGRES_USER}
@@ -35,9 +54,10 @@ services:
       - sec_network
 
   auth_redis_db:
-    image: redis:7.2
+    image: redis:7.2-bookworm
     container_name: auth_redis_db
     restart: unless-stopped
+    env_file: .env
     volumes:
       - auth_redis_db_data:/data
     environment:

@@ -28,8 +28,8 @@ from models.enums import TokenType
 
 
 router = APIRouter(
-    prefix="/auth",
-    tags=["auth"],
+    prefix="/users",
+    tags=["users"],
 )
 
 
@@ -124,7 +124,7 @@ async def login(
 async def login(
     response: Response,
     user_agent: str = Depends(get_user_agent),
-    refresh_token: str = Cookie(None, alias="RefreshToken"),
+    refresh_token: str = Cookie(None, alias=TokenType.refresh.name),
     redis_client: RedisClient = Depends(get_redis_client),
     pg_session: AsyncSession = Depends(get_pg_session),
 ) -> TokenInfo:
