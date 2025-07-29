@@ -11,7 +11,7 @@ from models.pg_models import Users
 from models.api_models import (
     RequestUserRegistration,
     RequestUserLoginData,
-    Tokens,
+    Tokens, TokenPayload,
 )
 from utils.custom_exception import (
     UserAlreadyExistsError,
@@ -248,41 +248,42 @@ class UsersRefreshBusinessModel:
         self._pg_session = pg_session
         self._redis_client = redis_client
 
-    async def execute(self, refresh_token: str, user_agent: str) -> Tokens:
+    async def execute(self, refresh_token_payload: TokenPayload) -> Tokens:
         """
         Точка входа в выполнение процесса - обновление токенов пользователя.
 
-        @type refresh_token: str
-        @param refresh_token:
-        @type user_agent: str
-        @param user_agent:
+        @type refresh_token_payload: TokenPayload
+        @param refresh_token_payload:
 
         @rtype tokens: Tokens
         @return tokens: Access/Refresh токены.
         """
-        refresh_token_payload = Tokenizer.decode_token(token=refresh_token)
+        if not await self._get_user_by_id(id_=refresh_token_payload.sub):
+            raise UserNotFoundError()
 
-        try:
-            user: Users = await self._get_user_by_id(
-                id_=refresh_token_payload["sub"],
-            )
+        user_id = refresh_token_payload.sub
+        user_agent = refresh_token_payload.user_agent
+        tokens = Tokenizer.gen_tokens(user_id=user_id, user_agent=user_agent)
 
-            if not user or user_agent != refresh_token_payload["user_agent"]:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token, please login again",
-                )
-
-        except KeyError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token, please login again",
-            )
-
-        tokens = Tokenizer.gen_tokens(
-            user_id=str(user.id),
-            user_agent=user_agent,
+        await self._redis_client.set(
+            key=Tokenizer.token_key_template.format(
+                user_id=user_id,
+                user_agent=user_agent,
+                token_type=tokens.access_token.type,
+            ),
+            value=tokens.access_token.token,
+            ttl=tokens.access_token.ttl,
         )
+        await self._redis_client.set(
+            key=Tokenizer.token_key_template.format(
+                user_id=user_id,
+                user_agent=user_agent,
+                token_type=tokens.refresh_token.type,
+            ),
+            value=tokens.refresh_token.token,
+            ttl=tokens.refresh_token.ttl,
+        )
+
         return tokens
 
     async def _get_user_by_id(self, id_: str) -> Users | None:
@@ -292,8 +293,8 @@ class UsersRefreshBusinessModel:
         @type id_: str
         @param id_:
 
-        @rtype found_user: Users | None
-        @return found_user:
+        @rtype: Users | None
+        @return:
         """
         query = await self._pg_session.execute(
             select(
@@ -303,7 +304,4 @@ class UsersRefreshBusinessModel:
                 Users.id == id_,
             )
         )
-        if found_user := query.scalar_one_or_none():
-            return found_user
-
-        raise UserNotFoundError()
+        return query.scalar_one_or_none()

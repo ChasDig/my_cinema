@@ -7,8 +7,6 @@ from fastapi import (
     Response,
     Depends,
     status,
-    Cookie,
-    HTTPException,
 )
 
 from database import get_pg_session, get_redis_client
@@ -18,11 +16,13 @@ from businesses_models import (
     UsersRefreshBusinessModel,
 )
 from database.redis_client import RedisClient
-from depends import get_user_agent
+from depends import get_user_agent, check_refresh_token
 from models.api_models import (
     RequestUserRegistration,
     RequestUserLoginData,
-    Tokens, TokenInfo,
+    Tokens,
+    TokenInfo,
+    TokenPayload,
 )
 from models.enums import TokenType
 
@@ -123,8 +123,7 @@ async def login(
 )
 async def login(
     response: Response,
-    user_agent: str = Depends(get_user_agent),
-    refresh_token: str = Cookie(None, alias=TokenType.refresh.name),
+    refresh_token_payload: TokenPayload = Depends(check_refresh_token),
     redis_client: RedisClient = Depends(get_redis_client),
     pg_session: AsyncSession = Depends(get_pg_session),
 ) -> TokenInfo:
@@ -135,10 +134,8 @@ async def login(
 
     @type response: Response
     @param response:
-    @type user_agent: str
-    @param user_agent: User-Agent из заголовка через Depends.
-    @type refresh_token: str
-    @param refresh_token: Refresh-токен, полученный и Cookie.
+    @type refresh_token_payload: TokenPayload
+    @param refresh_token_payload: Refresh-токен payload, полученный из Cookie.
     @type pg_session: AsyncSession
     @param pg_session: Сессия с БД Postgres через Depends.
     @type redis_client: RedisClient
@@ -147,19 +144,12 @@ async def login(
     @rtype: TokenInfo
     @return: Access-токен.
     """
-    if not refresh_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing RefreshToken",
-        )
-
     business_model = UsersRefreshBusinessModel(
         redis_client=redis_client,
         pg_session=pg_session,
     )
     tokens: Tokens = await business_model.execute(
-        refresh_token=refresh_token,
-        user_agent=user_agent,
+        refresh_token_payload=refresh_token_payload,
     )
 
     response.set_cookie(
