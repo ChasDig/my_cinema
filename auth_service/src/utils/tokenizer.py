@@ -1,10 +1,9 @@
 from datetime import datetime, UTC, timedelta
-from typing import Any
 
 from jose import jwt, JWTError
 from fastapi import HTTPException, status
 
-from core import crypto_config
+from core import crypto_config, logger
 from models.enums import TokenType
 from models.api_models import TokenPayload, TokenInfo, Tokens
 
@@ -102,24 +101,38 @@ class Tokenizer:
         )
 
     @staticmethod
-    def decode_token(token: str) -> dict[str, Any]:
+    def decode_token(token: str) -> TokenPayload:
         """
         Получение данных из токена.
 
         @type token: str
         @param token:
 
-        @rtype: dict[str, Any]
+        @rtype: TokenPayload
         @return:
         """
         try:
-            return jwt.decode(
+            token = jwt.decode(
                 token=token,
                 key = crypto_config.token_secret,
                 algorithms=[crypto_config.token_algorithm],
             )
+            return TokenPayload(
+                type=token["type"],
+                iat=token["iat"],
+                exp=token["exp"],
+                sub=token["sub"],
+                user_agent=token["user_agent"],
+            )
 
         except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token, please login again",
+            )
+
+        except KeyError as ex:
+            logger.error(f"Not valid token: {ex}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token, please login again",
