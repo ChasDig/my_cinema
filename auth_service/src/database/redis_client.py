@@ -63,7 +63,12 @@ class RedisClient:
         @rtype value: dict[str, str | int] | str | None
         @return value:
         """
-        value = await self._client.get(key)
+        try:
+            value = await self._client.get(key)
+
+        except Exception as ex:
+            logger.error(f"Error get data from Redis: {ex}")
+            raise RedisError()
 
         if as_dict:
             try:
@@ -74,6 +79,22 @@ class RedisClient:
 
         return value
 
+    async def delete(self, key: str) -> None:
+        """
+        Прослойка - удаление значений из Redis.
+
+        @type key: str
+        @param key:
+
+        @rtype: None
+        @return:
+        """
+        try:
+            await self._client.delete(key)
+
+        except Exception as ex:
+            logger.error(f"Error delete data from Redis: {ex}")
+            raise RedisError()
 
 async def get_redis_client() -> RedisClient:
     """

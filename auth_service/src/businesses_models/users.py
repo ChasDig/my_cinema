@@ -2,16 +2,17 @@ from pydantic import EmailStr
 from sqlalchemy import select, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import status, HTTPException
 
 from core import logger, crypto_config
 from database.redis_client import RedisClient
 from utils import Cryptor, Hasher, Tokenizer
 from models.pg_models import Users
+from utils.mixins import TokensRefreshMixin
 from models.api_models import (
     RequestUserRegistration,
     RequestUserLoginData,
-    Tokens, TokenPayload,
+    Tokens,
+    TokenPayload,
 )
 from utils.custom_exception import (
     UserAlreadyExistsError,
@@ -49,7 +50,6 @@ class UsersCreateBusinessModel:
             await self._pg_session.commit()
 
         except SQLAlchemyError as ex:
-            
             logger.error(
                 f"Error create UserNickname={registration_data.nickname}: {ex}"
             )
@@ -137,18 +137,20 @@ class UsersCreateBusinessModel:
         return email_enc, email_hash
 
 
-class UsersLoginBusinessModel:
+class UsersLoginBusinessModel(TokensRefreshMixin):
     """BusinessModel: авторизация пользователя."""
 
-    def __init__(self, pg_session: AsyncSession, redis_client: RedisClient):
+    def __init__(
+        self,
+        pg_session: AsyncSession,
+        redis_client: RedisClient,
+        user_agent: str,
+    ):
         self._pg_session = pg_session
         self._redis_client = redis_client
+        self._user_agent = user_agent
 
-    async def execute(
-        self,
-        login_data: RequestUserLoginData,
-        user_agent: str,
-    ) -> Tokens:
+    async def execute(self, login_data: RequestUserLoginData) -> Tokens:
         """
         Точка входа в выполнение процесса - авторизация пользователя.
 
@@ -159,31 +161,29 @@ class UsersLoginBusinessModel:
         @return tokens: Access/Refresh токены.
         """
         user: Users = await self._get_user_by_email(email=login_data.email)
+        if not user:
+            raise UserNotFoundError()
 
+        user_id = str(user.id)
         await self._check_password_by_hash(
             incoming_password=login_data.password.get_secret_value(),
             user_hash_password=user.password_hash,
         )
-
-        user_id = str(user.id)
-        tokens = Tokenizer.gen_tokens(user_id=user_id, user_agent=user_agent)
-        await self._redis_client.set(
-            key=Tokenizer.token_key_template.format(
-                user_id=user_id,
-                user_agent=user_agent,
-                token_type=tokens.access_token.type,
-            ),
-            value=tokens.access_token.token,
-            ttl=tokens.access_token.ttl,
+        await self._delete_tokens(
+            user_id=user_id,
+            redis_client=self._redis_client,
+            user_agent=self._user_agent,
         )
-        await self._redis_client.set(
-            key=Tokenizer.token_key_template.format(
-                user_id=user_id,
-                user_agent=user_agent,
-                token_type=tokens.refresh_token.type,
-            ),
-            value=tokens.refresh_token.token,
-            ttl=tokens.refresh_token.ttl,
+
+        tokens = Tokenizer.gen_tokens(
+            user_id=user_id,
+            user_agent=self._user_agent,
+        )
+        await self._insert_tokens(
+            tokens=tokens,
+            user=user,
+            redis_client=self._redis_client,
+            user_agent=self._user_agent,
         )
 
         return tokens
@@ -195,8 +195,8 @@ class UsersLoginBusinessModel:
         @type email: str | EmailStr
         @param email:
 
-        @rtype found_user: Users | None
-        @return found_user:
+        @rtype: Users | None
+        @return:
         """
         email_hash = Hasher.hash_str(
             str_=email,
@@ -211,10 +211,7 @@ class UsersLoginBusinessModel:
                 Users.email_hash == email_hash,
             )
         )
-        if found_user := query.scalar_one_or_none():
-            return found_user
-
-        raise UserNotFoundError()
+        return query.scalar_one_or_none()
 
     @staticmethod
     async def _check_password_by_hash(
@@ -241,7 +238,7 @@ class UsersLoginBusinessModel:
             )
 
 
-class UsersRefreshBusinessModel:
+class UsersRefreshBusinessModel(TokensRefreshMixin):
     """BusinessModel: обновление токенов пользователя."""
 
     def __init__(self, pg_session: AsyncSession, redis_client: RedisClient):
@@ -258,30 +255,24 @@ class UsersRefreshBusinessModel:
         @rtype tokens: Tokens
         @return tokens: Access/Refresh токены.
         """
-        if not await self._get_user_by_id(id_=refresh_token_payload.sub):
+        user = await self._get_user_by_id(id_=refresh_token_payload.sub)
+        if not user:
             raise UserNotFoundError()
 
-        user_id = refresh_token_payload.sub
+        user_id = str(user.id)
         user_agent = refresh_token_payload.user_agent
-        tokens = Tokenizer.gen_tokens(user_id=user_id, user_agent=user_agent)
-
-        await self._redis_client.set(
-            key=Tokenizer.token_key_template.format(
-                user_id=user_id,
-                user_agent=user_agent,
-                token_type=tokens.access_token.type,
-            ),
-            value=tokens.access_token.token,
-            ttl=tokens.access_token.ttl,
+        await self._delete_tokens(
+            user_id=user_id,
+            redis_client=self._redis_client,
+            user_agent=user_agent,
         )
-        await self._redis_client.set(
-            key=Tokenizer.token_key_template.format(
-                user_id=user_id,
-                user_agent=user_agent,
-                token_type=tokens.refresh_token.type,
-            ),
-            value=tokens.refresh_token.token,
-            ttl=tokens.refresh_token.ttl,
+
+        tokens = Tokenizer.gen_tokens(user_id=user_id, user_agent=user_agent)
+        await self._insert_tokens(
+            tokens=tokens,
+            user=user,
+            redis_client=self._redis_client,
+            user_agent=user_agent,
         )
 
         return tokens

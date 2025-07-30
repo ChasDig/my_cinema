@@ -100,12 +100,10 @@ async def login(
     business_model = UsersLoginBusinessModel(
         pg_session=pg_session,
         redis_client=redis_client,
-    )
-
-    tokens = await business_model.execute(
-        login_data=login_data,
         user_agent=user_agent,
     )
+    tokens = await business_model.execute(login_data=login_data)
+
     response.set_cookie(
         key=TokenType.refresh.name,
         value=tokens.refresh_token.token,
@@ -121,7 +119,7 @@ async def login(
     status_code=status.HTTP_200_OK,
     response_model=TokenInfo,
 )
-async def login(
+async def refresh(
     response: Response,
     refresh_token_payload: TokenPayload = Depends(check_refresh_token),
     redis_client: RedisClient = Depends(get_redis_client),
