@@ -1,31 +1,23 @@
 from typing import Annotated
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import (
-    APIRouter,
-    Body,
-    Response,
-    Depends,
-    status,
-)
-
-from database import get_pg_session, get_redis_client
 from businesses_models import (
     UsersCreateBusinessModel,
     UsersLoginBusinessModel,
     UsersRefreshBusinessModel,
 )
+from database import get_pg_session, get_redis_client
 from database.redis_client import RedisClient
-from depends import get_user_agent, check_refresh_token
+from depends import check_refresh_token, get_user_agent
+from fastapi import APIRouter, Body, Depends, Response, status
 from models.api_models import (
-    RequestUserRegistration,
     RequestUserLoginData,
-    Tokens,
+    RequestUserRegistration,
     TokenInfo,
     TokenPayload,
+    Tokens,
 )
 from models.enums import TokenType
-
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(
     prefix="/users",
@@ -62,6 +54,7 @@ async def registration(
         status_code=status.HTTP_201_CREATED,
         content=f"User '{registration_data.nickname}' was created",
     )
+
 
 @router.post(
     "/login",
@@ -113,6 +106,7 @@ async def login(
     )
 
     return tokens.access_token
+
 
 @router.post(
     "/refresh",

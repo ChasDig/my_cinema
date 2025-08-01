@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, SecretStr, field_validator, Field
+from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator
 from pydantic_core import PydanticCustomError
 
 

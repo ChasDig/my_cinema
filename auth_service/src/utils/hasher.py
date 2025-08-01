@@ -1,13 +1,11 @@
-import os
 import base64
-import hmac
 import hashlib
-
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
+import hmac
+import os
 
 from core import crypto_config
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 class Hasher:

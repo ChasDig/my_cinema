@@ -3,3 +3,4 @@ __pycache__
 .env
 *.pyc
 .git
+.pre-commit-config.yaml

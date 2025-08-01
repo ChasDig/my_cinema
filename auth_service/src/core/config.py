@@ -105,6 +105,7 @@ class CryptoSettings(BaseSettings):
 
 class Settings(BaseSettings):
     """Конфигурации - базовые."""
+
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
         env_file_encoding="utf-8",
@@ -112,9 +113,15 @@ class Settings(BaseSettings):
     )
 
     # Meta
-    service_name: str = "auth_service"
-    base_dir: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    log_format: str = "%(asctime)s - %(levelname)s - %(message)s"
+    service_name: str = Field(default="auth_service")
+    log_format: str = Field(
+        default="%(asctime)s - %(levelname)s - %(message)s",
+    )
+
+    @computed_field
+    @property
+    def base_dir(self) -> str:
+        return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 config = Settings()

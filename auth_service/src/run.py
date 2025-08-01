@@ -1,7 +1,5 @@
-from fastapi import FastAPI
-
 from api.v1 import users_router
-
+from fastapi import FastAPI
 
 app = FastAPI(
     title="Auth Service",

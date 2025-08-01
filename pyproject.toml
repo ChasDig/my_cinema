@@ -1,0 +1,8 @@
+[tool.mypy]
+disable_error_code = "misc"
+exclude = ".*/alembic/.*$, .*/meta_classes\\.py$"
+
+[tool.flake8]
+ignore = "E203"
+extend-ignore = "W503, B008"
+exclude = "*/alembic/*, */meta_classes.py, .venv, .git, __pycache__"

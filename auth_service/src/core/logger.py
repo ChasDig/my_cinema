@@ -1,7 +1,5 @@
-import pathlib
 import logging
-
-__all__ = ["logger"]
+import pathlib
 
 from core import config
 
@@ -17,9 +15,17 @@ def get_logger() -> logging.Logger:
     logger_.setLevel(logging.DEBUG)
     console_handler = logging.StreamHandler()
 
-    pathlib.Path(f"{config.base_dir}/logs/").mkdir(exist_ok=True)
-    file_handler = logging.FileHandler(f"{config.base_dir}/logs/app.log")
-    formatter = logging.Formatter(config.log_format)
+    pathlib.Path(
+        f"{config.base_dir}/logs/",  # type: ignore[attr-defined]
+    ).mkdir(
+        exist_ok=True,
+    )
+    file_handler = logging.FileHandler(
+        f"{config.base_dir}/logs/app.log",  # type: ignore[attr-defined]
+    )
+    formatter = logging.Formatter(
+        config.log_format,  # type: ignore[attr-defined]
+    )
 
     console_handler.setFormatter(formatter)
     file_handler.setFormatter(formatter)
