@@ -1,9 +1,8 @@
-import os
 import base64
-
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+import os
 
 from core import crypto_config
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from utils.hasher import Hasher
 
 
@@ -51,8 +50,9 @@ class Cryptor:
         salt_len = crypto_config.salt_length_bytes
         nonce_len = crypto_config.nonce_length_bytes
         salt = decoded[:salt_len]
-        nonce = decoded[salt_len: salt_len + nonce_len]
-        ciphertext = decoded[salt_len + nonce_len:]
+        # TODO:
+        nonce = decoded[salt_len : salt_len + nonce_len]  # noqa: E203
+        ciphertext = decoded[salt_len + nonce_len :]  # noqa: E203
 
         key = Hasher.gen_driver_key(password=password, salt=salt)
         aes_gcm = AESGCM(key)

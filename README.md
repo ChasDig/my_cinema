@@ -13,18 +13,22 @@
 - Применяемые соглашения к разработке ПО можно рассмотреть в блоке **Соглашения разработки**;
 - Параметры запуска проекта можно рассмотреть в блоке **Запуск проекта**;
 
+
 ## Список микросервисов:
 - [Auth](docs/services/auth/auth.md);
+
 
 ## Архитектура проекта:
 - указаны основные компоненты системы;
 - определены взаимодействия между компонентами системы;
 TODO:
 
+
 ## Требования к проекту:
 TODO:
 
-# Соглашения разработки:
+
+## Соглашения разработки:
 ### GitFlow:
 #### Ветки (branches):
 - **main**: основная(работоспособная) ветка кода, содержащая код для отправки на ревью;
@@ -41,11 +45,36 @@ TODO:
 #### Шаблоны построения URI-методов:
 - Ссылка на источник: https://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api#restful
 
+
 ## Code Style:
-- **PEP8**(https://peps.python.org/pep-0008/): обязателен;
-- Docstring-формат - **Epytext**(https://epydoc.sourceforge.net/manual-epytext.html): обязателен;
-- Linters: **Flake8**(https://flake8.pycqa.org/en/latest/): обязателен;
-- **Pre-commit**(https://pre-commit.com/): обязателен;
+- **PEP8**(https://peps.python.org/pep-0008/) - обязателен;
+- Docstring-формат - **Epytext**(https://epydoc.sourceforge.net/manual-epytext.html) - обязателен;
+- Linters: **Flake8**(https://flake8.pycqa.org/en/latest/) - обязателен;
+- **Pre-commit**(https://pre-commit.com/): обязателен:
+- - Используемые **Pre-commit** (основные):
+- - - **black** - авто-форматирование кода;
+- - - **flake8** - проверка стиля и ошибок;
+- - - **mypy** - статическая типизация;
+- - - **isort** - сортировка импортов;
+
+### Запуск линтеров для локальной проверки кода:
+1. Установка и обновление pre-commit (если не установлен):
+```sh
+pip install pre-commit
+```
+2. Обновление хуков до последней версии (при необходимости):
+```sh
+pre-commit autoupdate
+```
+3. Применение хук на всех файлах (например, **black**) с исключением директорий:
+```sh
+pre-commit run black --all-files
+```
+4. Очистка кэша pre-commit
+```sh
+pre-commit clean
+```
+
 
 ## **Запуск проекта:**
 ### Перед запуском проекта:

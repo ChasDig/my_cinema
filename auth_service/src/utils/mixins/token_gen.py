@@ -1,10 +1,9 @@
-from fastapi import status, HTTPException
-
 from core import logger
 from database.redis_client import RedisClient
-from utils import Tokenizer
+from fastapi import HTTPException, status
 from models.api_models import Tokens
 from models.pg_models import Users
+from utils import Tokenizer
 from utils.custom_exception import RedisError
 
 
@@ -45,9 +44,7 @@ class TokensRefreshMixin:
                 value=tokens.access_token.token,
                 ttl=tokens.access_token.ttl,
             )
-            logger.info(
-                f"{tokens.access_token.type} token was gen for {for_gen}"
-            )
+            logger.info(f"{tokens.access_token.type} token gen for {for_gen}")
 
             await redis_client.set(
                 key=Tokenizer.token_key_template.format(
@@ -58,9 +55,7 @@ class TokensRefreshMixin:
                 value=tokens.refresh_token.token,
                 ttl=tokens.refresh_token.ttl,
             )
-            logger.info(
-                f"{tokens.refresh_token.type} token was gen for {for_gen}"
-            )
+            logger.info(f"{tokens.refresh_token.type} token gen for {for_gen}")
 
         except RedisError:
             raise HTTPException(

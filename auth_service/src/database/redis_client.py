@@ -1,8 +1,8 @@
 import json
-
-from redis.asyncio import Redis
+from typing import Any
 
 from core import db_config, logger
+from redis.asyncio import Redis
 from utils.custom_exception import RedisError
 
 
@@ -49,13 +49,13 @@ class RedisClient:
 
     async def get(
         self,
-        key: str,
+        key: str | Any,
         as_dict: bool = False,
     ) -> dict[str, str | int] | str | None:
         """
         Прослойка - получение значений из Redis.
 
-        @type key: str
+        @type key: str | bytes | bytearray
         @param key:
         @type as_dict: bool
         @param as_dict: Флаг - получаемые значения требуется сериализовать.
@@ -72,7 +72,7 @@ class RedisClient:
 
         if as_dict:
             try:
-                value = json.loads(value)
+                value = json.loads(value)  # type: ignore[arg-type]
 
             except (json.JSONDecodeError, TypeError) as ex:
                 logger.warning(f"Can't parse str as dict: {ex}")
@@ -95,6 +95,7 @@ class RedisClient:
         except Exception as ex:
             logger.error(f"Error delete data from Redis: {ex}")
             raise RedisError()
+
 
 async def get_redis_client() -> RedisClient:
     """

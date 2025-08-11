@@ -1,24 +1,23 @@
+from core import crypto_config, logger
+from database.redis_client import RedisClient
+from models.api_models import (
+    RequestUserLoginData,
+    RequestUserRegistration,
+    TokenPayload,
+    Tokens,
+)
+from models.pg_models import Users
 from pydantic import EmailStr
-from sqlalchemy import select, or_
+from sqlalchemy import or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from core import logger, crypto_config
-from database.redis_client import RedisClient
 from utils import Cryptor, Hasher, Tokenizer
-from models.pg_models import Users
-from utils.mixins import TokensRefreshMixin
-from models.api_models import (
-    RequestUserRegistration,
-    RequestUserLoginData,
-    Tokens,
-    TokenPayload,
-)
 from utils.custom_exception import (
-    UserAlreadyExistsError,
     SQLAlchemyErrorCommit,
+    UserAlreadyExistsError,
     UserNotFoundError,
 )
+from utils.mixins import TokensRefreshMixin
 
 
 class UsersCreateBusinessModel:
@@ -55,7 +54,7 @@ class UsersCreateBusinessModel:
             )
             await self._pg_session.rollback()
 
-            raise SQLAlchemyErrorCommit(details=f"Error create user")
+            raise SQLAlchemyErrorCommit(details="Error create user")
 
     async def _check_user_by_exist(
         self,
@@ -78,8 +77,7 @@ class UsersCreateBusinessModel:
         query = await self._pg_session.execute(
             select(
                 Users,
-            )
-            .where(
+            ).where(
                 or_(
                     Users.nickname == nickname,
                     Users.email_hash == email_hash,
@@ -160,7 +158,9 @@ class UsersLoginBusinessModel(TokensRefreshMixin):
         @rtype tokens: Tokens
         @return tokens: Access/Refresh токены.
         """
-        user: Users = await self._get_user_by_email(email=login_data.email)
+        user = await self._get_user_by_email(
+            email=login_data.email,
+        )
         if not user:
             raise UserNotFoundError()
 
@@ -206,12 +206,13 @@ class UsersLoginBusinessModel(TokensRefreshMixin):
         query = await self._pg_session.execute(
             select(
                 Users,
-            )
-            .where(
+            ).where(
                 Users.email_hash == email_hash,
             )
         )
-        return query.scalar_one_or_none()
+
+        user: Users | None = query.scalar_one_or_none()
+        return user
 
     @staticmethod
     async def _check_password_by_hash(
@@ -290,9 +291,10 @@ class UsersRefreshBusinessModel(TokensRefreshMixin):
         query = await self._pg_session.execute(
             select(
                 Users,
-            )
-            .where(
+            ).where(
                 Users.id == id_,
             )
         )
-        return query.scalar_one_or_none()
+
+        user: Users | None = query.scalar_one_or_none()
+        return user

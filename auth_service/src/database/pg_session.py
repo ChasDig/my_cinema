@@ -1,16 +1,15 @@
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Any
+from typing import Any, AsyncGenerator
 
+from core import SingletonMeta, db_config, logger
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import InterfaceError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncEngine,
-    async_sessionmaker,
     AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
-
-from core import db_config, logger, SingletonMeta
 
 
 class AsyncSessionFactory(metaclass=SingletonMeta):
@@ -18,7 +17,7 @@ class AsyncSessionFactory(metaclass=SingletonMeta):
 
     ERROR_EXC_TYPES = (InterfaceError, SQLAlchemyError)
 
-    def __init__(self, *args, async_engine: AsyncEngine, **kwargs) -> None:
+    def __init__(self, *args: Any, async_engine: AsyncEngine, **kwargs: Any):
         super().__init__(*args, **kwargs)
 
         self._engine: AsyncEngine = async_engine

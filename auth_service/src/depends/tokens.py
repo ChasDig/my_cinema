@@ -1,10 +1,9 @@
-from fastapi import Cookie, Depends, HTTPException, status
-
-from models.api_models import TokenPayload
-from utils import Tokenizer
-from models.enums import TokenType
-from depends import get_user_agent
 from database.redis_client import RedisClient, get_redis_client
+from depends import get_user_agent
+from fastapi import Cookie, Depends, HTTPException, status
+from models.api_models import TokenPayload
+from models.enums import TokenType
+from utils import Tokenizer
 
 
 async def check_refresh_token(

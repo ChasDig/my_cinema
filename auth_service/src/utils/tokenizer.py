@@ -1,11 +1,11 @@
-from datetime import datetime, UTC, timedelta
-
-from jose import jwt, JWTError
-from fastapi import HTTPException, status
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from core import crypto_config, logger
+from fastapi import HTTPException, status
+from jose import JWTError, jwt
+from models.api_models import TokenInfo, TokenPayload, Tokens
 from models.enums import TokenType
-from models.api_models import TokenPayload, TokenInfo, Tokens
 
 
 class Tokenizer:
@@ -22,7 +22,7 @@ class Tokenizer:
         exp_: float,
         sub: str,
         user_agent: str,
-    ) -> str:
+    ) -> str | Any:
         """
         Генерация токена.
 
@@ -112,17 +112,18 @@ class Tokenizer:
         @return:
         """
         try:
-            token = jwt.decode(
+            token_data: dict[str, Any] = jwt.decode(
                 token=token,
-                key = crypto_config.token_secret,
+                key=crypto_config.token_secret,
                 algorithms=[crypto_config.token_algorithm],
             )
+
             return TokenPayload(
-                type=token["type"],
-                iat=token["iat"],
-                exp=token["exp"],
-                sub=token["sub"],
-                user_agent=token["user_agent"],
+                type=token_data["type"],
+                iat=token_data["iat"],
+                exp=token_data["exp"],
+                sub=token_data["sub"],
+                user_agent=token_data["user_agent"],
             )
 
         except JWTError:

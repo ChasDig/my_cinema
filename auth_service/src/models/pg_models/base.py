@@ -2,8 +2,8 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import func
 from sqlalchemy import UUID as SQLAlchemyUUID
+from sqlalchemy import func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -17,8 +17,8 @@ class Base(DeclarativeBase):
     )
 
     @classmethod
-    def model_name(cls) -> str:
-        return cls.__tablename__
+    def model_name(cls) -> str | None:
+        return getattr(cls, "__tablename__", None)
 
 
 class DatetimeStampedMixin:
@@ -31,4 +31,4 @@ class DatetimeStampedMixin:
 class Schemas(enum.Enum):
     """Postgres схемы."""
 
-    users =  "users"
+    users = "users"

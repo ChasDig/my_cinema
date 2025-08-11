@@ -1,0 +1,44 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace  # Удаляет пробелы в конце строк
+      - id: end-of-file-fixer     # Добавляет пустую строку в конце файла
+      - id: check-yaml           # Проверяет валидность YAML
+      - id: check-ast               # Проверяет, что Python-код компилируется
+      - id: check-added-large-files  # Блокирует случайный коммит больших файлов
+      - id: detect-private-key       # Ищет приватные ключи в коммитах
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        language_version: python3.13
+
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        args: ["--profile=black"]  # Для совместимости с Black
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        language_version: python3.13
+        args: ["--config=pyproject.toml"]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        args: [
+          --strict,
+          --ignore-missing-imports,
+          --config-file=pyproject.toml,
+          --show-error-codes
+        ]
+        additional_dependencies:
+          - types-redis
+          - types-requests
+          - types-python-dateutil
