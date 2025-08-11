@@ -69,6 +69,10 @@ class DBSettings(BaseSettings):
     redis_auth_db: int = Field(default=0, alias="AUTH_REDIS_DB")
     redis_host: str = Field(default="127.0.0.1", alias="AUTH_REDIS_HOST")
     redis_port: int = Field(default=6379, alias="AUTH_REDIS_PORT")
+    redis_max_connections_pool: int = Field(
+        default=50,
+        alias="AUTH_REDIS_MAX_CONNECTION_POOL",
+    )
 
 
 class CryptoSettings(BaseSettings):

@@ -1,22 +1,32 @@
 import json
-from typing import Any
+from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator
 
 from core import db_config, logger
-from redis.asyncio import Redis
+from redis.asyncio import ConnectionPool, Redis
 from utils.custom_exception import RedisError
+
+redis_pool = ConnectionPool(
+    password=db_config.redis_password,
+    db=db_config.redis_auth_db,
+    host=db_config.redis_host,
+    port=db_config.redis_port,
+    decode_responses=True,
+    max_connections=db_config.redis_max_connections_pool,
+)
 
 
 class RedisClient:
     """Асинхронный клиент Redis."""
 
     def __init__(self) -> None:
-        self._client = Redis(
-            password=db_config.redis_password,
-            db=db_config.redis_auth_db,
-            host=db_config.redis_host,
-            port=db_config.redis_port,
-            decode_responses=True,
-        )
+        self._client = Redis(connection_pool=redis_pool)
+
+    async def close(self) -> None:
+        await self._client.close()
+
+    async def ping(self) -> None:
+        await self._client.ping()
 
     async def set(
         self,
@@ -58,7 +68,7 @@ class RedisClient:
         @type key: str | bytes | bytearray
         @param key:
         @type as_dict: bool
-        @param as_dict: Флаг - получаемые значения требуется сериализовать.
+        @param as_dict: Флаг - для получаемых значений требуется сериализация.
 
         @rtype value: dict[str, str | int] | str | None
         @return value:
@@ -70,14 +80,14 @@ class RedisClient:
             logger.error(f"Error get data from Redis: {ex}")
             raise RedisError()
 
-        if as_dict:
+        if as_dict and value is not None:
             try:
-                value = json.loads(value)  # type: ignore[arg-type]
+                value = json.loads(value)
 
             except (json.JSONDecodeError, TypeError) as ex:
                 logger.warning(f"Can't parse str as dict: {ex}")
 
-        return value
+        return value  # type: ignore
 
     async def delete(self, key: str) -> None:
         """
@@ -97,11 +107,32 @@ class RedisClient:
             raise RedisError()
 
 
-async def get_redis_client() -> RedisClient:
+@asynccontextmanager
+async def redis_context_manager() -> AsyncGenerator[RedisClient, Any]:
     """
-    Получение(инициализация) клиента Redis.
+    Асинхронный контекстный менеджер для получения активного клиента Redis.
 
-    @rtype: RedisClient
+    @rtype: AsyncGenerator[RedisClient, Any]
     @return:
     """
-    return RedisClient()
+    client = RedisClient()
+
+    try:
+        yield client
+
+    finally:
+        await client.close()
+
+
+async def get_redis_client() -> AsyncGenerator[RedisClient, Any]:
+    """
+    Асинхронный генератор для получения активной сессии с Redis.
+    Применение:
+    - Обертка для Dependency в FastAPI (раскрытие асинхронных генераторов,
+    аналогия - anext).
+
+    @rtype client: AsyncGenerator[RedisClient, Any]
+    @return client:
+    """
+    async with redis_context_manager() as client:
+        yield client

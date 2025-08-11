@@ -98,6 +98,9 @@ pg_session_factory = AsyncSessionFactory(async_engine=async_engine_)
 async def get_pg_session() -> AsyncGenerator[AsyncSession, Any]:
     """
     Асинхронный генератор для получения активной сессии с Postgres.
+    Применение:
+    - Обертка для Dependency в FastAPI (раскрытие асинхронных генераторов,
+    аналогия - anext).
 
     @rtype session: AsyncGenerator[AsyncSession, Any]
     @return session:

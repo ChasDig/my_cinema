@@ -1,4 +1,5 @@
 from api.v1 import users_router
+from core import register_events
 from fastapi import FastAPI
 
 app = FastAPI(
@@ -8,3 +9,4 @@ app = FastAPI(
     root_path="/auth",
 )
 app.include_router(users_router)
+register_events(app)

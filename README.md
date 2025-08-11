@@ -66,7 +66,7 @@ pip install pre-commit
 ```sh
 pre-commit autoupdate
 ```
-3. Применение хук на всех файлах (например, **black**) с исключением директорий:
+3. Применение хук на всех файлах (например, **black**):
 ```sh
 pre-commit run black --all-files
 ```
