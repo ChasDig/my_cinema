@@ -1,4 +1,7 @@
 [tool.mypy]
+python_version = 3.13
+warn_unused_configs = true
+disallow_incomplete_defs = true
 disable_error_code = "misc"
 exclude = ".*/alembic/.*$, .*/meta_classes\\.py$"
 
