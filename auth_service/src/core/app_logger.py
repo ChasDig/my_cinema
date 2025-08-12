@@ -9,22 +9,22 @@ def get_logger() -> logging.Logger:
     Получение Logger-а.
 
     @rtype logger_: logging.Logger
-    @return logger_: Access-токен.
+    @return logger_:
     """
     logger_ = logging.getLogger()
     logger_.setLevel(logging.DEBUG)
     console_handler = logging.StreamHandler()
 
     pathlib.Path(
-        f"{config.base_dir}/logs/",  # type: ignore[attr-defined]
+        f"{config.base_dir}/logs/",
     ).mkdir(
         exist_ok=True,
     )
     file_handler = logging.FileHandler(
-        f"{config.base_dir}/logs/app.log",  # type: ignore[attr-defined]
+        f"{config.base_dir}/logs/app.log",
     )
     formatter = logging.Formatter(
-        config.log_format,  # type: ignore[attr-defined]
+        config.log_format,
     )
 
     console_handler.setFormatter(formatter)
