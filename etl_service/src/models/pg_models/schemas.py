@@ -5,3 +5,4 @@ class Schemas(enum.Enum):
     """Postgres схемы."""
 
     movies = "movies"
+    internal = "internal"

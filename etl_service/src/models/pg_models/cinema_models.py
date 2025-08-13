@@ -1,13 +1,16 @@
+import uuid
 from datetime import date
 
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import UUID as SQLAlchemyUUID
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base, DatetimeStampedMixin
+from .base import BaseDatetimeStamped
 from .pg_enums import person_type_enum
 from .schemas import Schemas
 
 
-class Movies(Base, DatetimeStampedMixin):
+class Movies(BaseDatetimeStamped):
     """Postgres модель - Фильмы."""
 
     __tablename__ = "movies"
@@ -40,7 +43,7 @@ class Movies(Base, DatetimeStampedMixin):
         )
 
 
-class Persons(Base, DatetimeStampedMixin):
+class Persons(BaseDatetimeStamped):
     """Postgres модель - Персоны."""
 
     __tablename__ = "persons"
@@ -67,7 +70,7 @@ class Persons(Base, DatetimeStampedMixin):
         )
 
 
-class Genres(Base, DatetimeStampedMixin):
+class Genres(BaseDatetimeStamped):
     """Postgres модель - Персоны."""
 
     __tablename__ = "genres"
@@ -86,3 +89,53 @@ class Genres(Base, DatetimeStampedMixin):
 
     def __repr__(self) -> str:
         return f"{self.__tablename__} '{self.title}'"
+
+
+class MoviesPersonsAssociation(BaseDatetimeStamped):
+    """Postgres модель-связка - Фильм и Персона."""
+
+    __tablename__ = "movies_persons_association"
+    __table_args__ = {"schema": Schemas.movies.name}
+
+    movie_id: Mapped[uuid.UUID] = mapped_column(
+        SQLAlchemyUUID(as_uuid=True),
+        ForeignKey("movies.movies.id"),
+        primary_key=True,
+    )
+    person_id: Mapped[uuid.UUID] = mapped_column(
+        SQLAlchemyUUID(as_uuid=True),
+        ForeignKey("movies.persons.id"),
+        primary_key=True,
+    )
+
+    movie: Mapped["Movies"] = relationship(backref="movie_person_association")
+    person: Mapped["Persons"] = relationship(
+        backref="movie_person_association",
+    )
+
+    def __repr__(self) -> str:
+        return f"MovieID={self.movie_id}, PersonID={self.person_id}"
+
+
+class MoviesGenresAssociation(BaseDatetimeStamped):
+    """Postgres модель-связка - Фильм и Жанр."""
+
+    __tablename__ = "movies_genres_association"
+    __table_args__ = {"schema": Schemas.movies.name}
+
+    movie_id: Mapped[uuid.UUID] = mapped_column(
+        SQLAlchemyUUID(as_uuid=True),
+        ForeignKey("movies.movies.id"),
+        primary_key=True,
+    )
+    genre_id: Mapped[uuid.UUID] = mapped_column(
+        SQLAlchemyUUID(as_uuid=True),
+        ForeignKey("movies.genres.id"),
+        primary_key=True,
+    )
+
+    movie: Mapped["Movies"] = relationship(backref="movie_genre_association")
+    genre: Mapped["Genres"] = relationship(backref="movie_genre_association")
+
+    def __repr__(self) -> str:
+        return f"MovieID={self.movie_id}, GenreID={self.genre_id}"

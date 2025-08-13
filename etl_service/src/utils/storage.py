@@ -1,6 +1,8 @@
 from asyncio import Queue
 from typing import Any
 
+from core import config
+
 
 class Storage:
     """Хранилище, предоставляет доступ к Queue, связывающие ETL-процессы."""
@@ -9,7 +11,7 @@ class Storage:
         self.raw_data_queue: dict[str, Queue[Any]] = dict()
         self.formatted_data_queue: dict[str, Queue[Any]] = dict()
 
-    def get_raw_queue_by_type(self, type_: str) -> Queue[Any] | None:
+    def raw_queue_by_type(self, type_: str) -> Queue[Any]:
         """
         Получение данных из raw_data_queue - очередь с сырыми данными из
         Postgres.
@@ -19,15 +21,17 @@ class Storage:
         @type type_: str
         @param type_: Тип объекта, по которому хранятся данные в очереди.
 
-        @rtype: Queue[Any] | None
+        @rtype: Queue[Any]
         @return:
         """
         if not self.raw_data_queue.get(type_):
-            self.raw_data_queue[type_] = Queue()
+            self.raw_data_queue[type_] = Queue(
+                maxsize=config.etl_movies_select_limit,
+            )
 
         return self.raw_data_queue[type_]
 
-    def get_formatted_queue_by_type(self, type_: str) -> Queue[Any] | None:
+    def formatted_queue_by_type(self, type_: str) -> Queue[Any]:
         """
         Получение данных из formatted_data_queue - очередь с готовыми данными
         для записи в Elasticsearch.
@@ -37,10 +41,15 @@ class Storage:
         @type type_: str
         @param type_: Тип объекта, по которому хранятся данные в очереди.
 
-        @rtype: Queue[Any] | None
+        @rtype: Queue[Any]
         @return:
         """
         if not self.formatted_data_queue.get(type_):
-            self.formatted_data_queue[type_] = Queue()
+            self.formatted_data_queue[type_] = Queue(
+                maxsize=config.etl_movies_select_limit,
+            )
 
         return self.formatted_data_queue[type_]
+
+
+storage = Storage()

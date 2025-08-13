@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import UUID as SQLAlchemyUUID
-from sqlalchemy import func
+from sqlalchemy import DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -16,8 +16,8 @@ class Base(DeclarativeBase):
     )
 
     @classmethod
-    def model_name(cls) -> str | None:
-        return getattr(cls, "__tablename__", None)
+    def model_name(cls) -> str:
+        return getattr(cls, "__tablename__", "")
 
 
 class DatetimeStampedMixin:
@@ -26,15 +26,25 @@ class DatetimeStampedMixin:
     (мягкое удаление).
     """
 
-    created_at: Mapped[datetime] = mapped_column(
+    created_at: datetime = mapped_column(
+        DateTime(timezone=True),
         server_default=func.now(),
         doc="Дата и время создания объекта",
     )
-    updated_at: Mapped[datetime] = mapped_column(
+    updated_at: datetime = mapped_column(
+        DateTime(timezone=True),
         server_default=func.now(),
+        onupdate=func.now(),
         doc="Дата и время обновления объекта",
     )
-    deleted_at: Mapped[datetime] = mapped_column(
+    deleted_at: datetime = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
         doc="Дата и время мягкого удаления объекта",
     )
+
+
+class BaseDatetimeStamped(Base, DatetimeStampedMixin):
+    """Postgres модель - Base + DatetimeStampedMixin."""
+
+    pass
