@@ -23,12 +23,12 @@ class DBSettings(BaseSettings):
     )
     pg_database: str = Field(default="auth_db", alias="AUTH_POSTGRES_DB")
     pg_username: str = Field(
-        default="auth_service",
+        default="auth_user",
         alias="AUTH_POSTGRES_USER",
     )
     pg_password: str = Field(alias="AUTH_POSTGRES_PASSWORD")
-    pg_host: str = Field(default="127.0.0.1", alias="AUTH_POSTGRES_HOST")
-    pg_port: int = Field(default=5432, alias="AUTH_POSTGRES_PORT")
+    pg_host: str = Field(default="127.0.0.1", alias="POSTGRES_HOST")
+    pg_port: int = Field(default=5432, alias="POSTGRES_PORT")
 
     pg_engine_echo: bool = Field(
         default=False,
@@ -65,10 +65,10 @@ class DBSettings(BaseSettings):
         )
 
     # RedisDB
-    redis_password: str = Field(alias="AUTH_REDIS_PASSWORD")
+    redis_password: str = Field(alias="REDIS_PASSWORD")
     redis_auth_db: int = Field(default=0, alias="AUTH_REDIS_DB")
-    redis_host: str = Field(default="127.0.0.1", alias="AUTH_REDIS_HOST")
-    redis_port: int = Field(default=6379, alias="AUTH_REDIS_PORT")
+    redis_host: str = Field(default="127.0.0.1", alias="REDIS_HOST")
+    redis_port: int = Field(default=6379, alias="REDIS_PORT")
     redis_max_connections_pool: int = Field(
         default=50,
         alias="AUTH_REDIS_MAX_CONNECTION_POOL",

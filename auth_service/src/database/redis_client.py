@@ -2,7 +2,8 @@ import json
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
-from core import db_config, logger
+from core.app_config import db_config
+from core.app_logger import logger
 from redis.asyncio import ConnectionPool, Redis
 from utils.custom_exception import RedisError
 

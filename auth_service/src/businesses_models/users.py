@@ -1,4 +1,5 @@
-from core import crypto_config, logger
+from core.app_config import crypto_config
+from core.app_logger import logger
 from database.redis_client import RedisClient
 from models.api_models import (
     RequestUserLoginData,

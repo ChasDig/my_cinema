@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
-from core import SingletonMeta, db_config, logger
+from core.app_config import db_config
+from core.app_logger import logger
+from core.meta_classes import SingletonMeta
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import InterfaceError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (

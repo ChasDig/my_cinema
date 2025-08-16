@@ -1,5 +1,5 @@
 from api.v1 import users_router
-from core import register_events
+from core.events import register_events
 from fastapi import FastAPI
 
 app = FastAPI(

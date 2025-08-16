@@ -1,7 +1,7 @@
 import logging
 import pathlib
 
-from core import config
+from core.app_config import config
 
 
 def get_logger() -> logging.Logger:
