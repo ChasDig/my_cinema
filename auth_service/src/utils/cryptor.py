@@ -1,7 +1,7 @@
 import base64
 import os
 
-from core import crypto_config
+from core.app_config import crypto_config
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from utils.hasher import Hasher
 

@@ -2,7 +2,7 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context  # type: ignore[attr-defined]
-from core.config import DBSettings
+from core.app_config import DBSettings
 from models.pg_models import Base
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncEngine, async_engine_from_config

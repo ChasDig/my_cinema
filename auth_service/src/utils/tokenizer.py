@@ -1,7 +1,8 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from core import crypto_config, logger
+from core.app_config import crypto_config
+from core.app_logger import logger
 from fastapi import HTTPException, status
 from jose import JWTError, jwt
 from models.api_models import TokenInfo, TokenPayload, Tokens

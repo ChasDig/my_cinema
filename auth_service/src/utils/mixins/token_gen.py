@@ -1,4 +1,4 @@
-from core import logger
+from core.app_logger import logger
 from database.redis_client import RedisClient
 from fastapi import HTTPException, status
 from models.api_models import Tokens
