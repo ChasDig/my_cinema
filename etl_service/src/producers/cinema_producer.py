@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Generic, Mapping, Type
+from typing import Mapping, Type
 
 from core.app_logger import logger
 from database import pg_session_factory
 from models.pg_models import ETLReferenceTimestamp, Movies
 from producers.base import BaseRule
-from producers.prducer_type_hints import PDModelsT, PGModelsT
+from producers.prducer_type_hints import PGModelsT
 from producers.producer_rules import MoviesRules
 from pydantic import BaseModel
 from sqlalchemy import select, update
@@ -14,7 +14,7 @@ from utils import ETLComponent, storage
 from utils.custom_exception import ProduceException
 
 
-class CinemaProducer(ETLComponent, Generic[PGModelsT, PDModelsT]):
+class CinemaProducer(ETLComponent):
     """Producer для Cinema Service."""
 
     def __init__(self) -> None:
