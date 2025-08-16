@@ -9,3 +9,4 @@ exclude = ".*/alembic/.*$, .*/meta_classes\\.py$"
 ignore = "E203"
 extend-ignore = "W503, B008"
 exclude = "*/alembic/*, */meta_classes.py, .venv, .git, __pycache__"
+max-line-length = 120

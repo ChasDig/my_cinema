@@ -90,6 +90,24 @@ pre-commit clean
 docker compose -f ./docker-compose.yaml -f docker-compose.override.yaml up -d
 ```
 
+
+## **Работа с Alembic:**
+На примере Auth Service.
+
+### Создание миграции:
+```sh
+alembic revision --autogenerate -m "message"
+```
+### Выполнение миграции:
+```sh
+alembic upgrade head
+```
+### Откат миграции на 1 шаг:
+```sh
+alembic downgrade -1
+```
+
+
 ## **Осознанные допущения в проекте:**
 - Местами можно заметить дубли кодовой базы: нарушение принципов разделение(точнее сказать вынесения) интерфейсов в
 отдельные модули. Например, **Admin Service(DjangoORM)** и **ETL Service(SQLAlchemyORM)** имеют одни и те же модули по

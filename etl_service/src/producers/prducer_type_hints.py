@@ -1,14 +1,13 @@
-from datetime import datetime
-from typing import Any, Callable, Coroutine, Type
+from typing import Mapping, Type, TypeVar
 
-from models.pg_models import BaseDatetimeStamped
-from sqlalchemy.ext.asyncio import AsyncSession
+from models.pg_models import Base
+from producers.base import BaseRule
+from pydantic import BaseModel
 
-# CinemaProducer:
-PGModelsT = Type[BaseDatetimeStamped]
-ProduceRuleResultT = list[PGModelsT]
-ProduceRuleFuncT = Callable[
-    [AsyncSession, datetime | None],
-    Coroutine[Any, Any, list[PGModelsT]],
+PGModelsT = TypeVar("PGModelsT", bound=Base)
+PDModelsT = TypeVar("PDModelsT", bound=BaseModel)
+
+ModelsByRuleT = Mapping[
+    Type[PGModelsT],
+    Type[BaseRule[BaseModel]],
 ]
-ModelsByRuleT = dict[PGModelsT, ProduceRuleFuncT]

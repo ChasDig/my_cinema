@@ -3,14 +3,15 @@ from datetime import date
 
 from sqlalchemy import UUID as SQLAlchemyUUID
 from sqlalchemy import ForeignKey
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import BaseDatetimeStamped
+from .base import ActiveMixin, Base, DatetimeStampedMixin
 from .pg_enums import person_type_enum
 from .schemas import Schemas
 
 
-class Movies(BaseDatetimeStamped):
+class Movies(Base, DatetimeStampedMixin, ActiveMixin):
     """Postgres модель - Фильмы."""
 
     __tablename__ = "movies"
@@ -36,6 +37,27 @@ class Movies(BaseDatetimeStamped):
         doc="Возрастной рейтинг (ограничение)",
     )
 
+    movie_person_ass: Mapped[list["MoviesPersonsAssociation"]] = relationship(
+        back_populates="movie",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+
+    movie_genre_ass: Mapped[list["MoviesGenresAssociation"]] = relationship(
+        back_populates="movie",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+
+    persons = association_proxy(
+        "movie_person_association",
+        "person",
+    )
+    genres = association_proxy(
+        "movie_genre_association",
+        "genre",
+    )
+
     def __repr__(self) -> str:
         return (
             f"{self.__tablename__} "
@@ -43,7 +65,7 @@ class Movies(BaseDatetimeStamped):
         )
 
 
-class Persons(BaseDatetimeStamped):
+class Persons(Base, DatetimeStampedMixin, ActiveMixin):
     """Postgres модель - Персоны."""
 
     __tablename__ = "persons"
@@ -63,6 +85,22 @@ class Persons(BaseDatetimeStamped):
         doc="Тип занятости (характер деятельности)",
     )
 
+    movie_person_ass: Mapped[list["MoviesPersonsAssociation"]] = relationship(
+        back_populates="person",
+        lazy="selectin",
+    )
+
+    movies = association_proxy(
+        "movie_person_association",
+        "movie",
+    )
+
+    def get_person_name(self) -> str:
+        if self.second_name:
+            return f"{self.first_name} {self.second_name} {self.last_name}"
+
+        return f"{self.first_name} {self.last_name}"
+
     def __repr__(self) -> str:
         return (
             f"{self.__tablename__} {self.first_name} {self.last_name} "
@@ -70,7 +108,7 @@ class Persons(BaseDatetimeStamped):
         )
 
 
-class Genres(BaseDatetimeStamped):
+class Genres(Base, DatetimeStampedMixin, ActiveMixin):
     """Postgres модель - Персоны."""
 
     __tablename__ = "genres"
@@ -87,11 +125,20 @@ class Genres(BaseDatetimeStamped):
         doc="Возрастной рейтинг (ограничение)",
     )
 
+    movie_genre_ass: Mapped[list["MoviesGenresAssociation"]] = relationship(
+        back_populates="genre", lazy="selectin"
+    )
+
+    movies = association_proxy(
+        "movie_genre_association",
+        "movie",
+    )
+
     def __repr__(self) -> str:
         return f"{self.__tablename__} '{self.title}'"
 
 
-class MoviesPersonsAssociation(BaseDatetimeStamped):
+class MoviesPersonsAssociation(Base, DatetimeStampedMixin, ActiveMixin):
     """Postgres модель-связка - Фильм и Персона."""
 
     __tablename__ = "movies_persons_association"
@@ -108,16 +155,21 @@ class MoviesPersonsAssociation(BaseDatetimeStamped):
         primary_key=True,
     )
 
-    movie: Mapped["Movies"] = relationship(backref="movie_person_association")
+    movie: Mapped["Movies"] = relationship(
+        back_populates="movie_person_association",
+        lazy="joined",
+    )
+
     person: Mapped["Persons"] = relationship(
-        backref="movie_person_association",
+        back_populates="movie_person_association",
+        lazy="joined",
     )
 
     def __repr__(self) -> str:
         return f"MovieID={self.movie_id}, PersonID={self.person_id}"
 
 
-class MoviesGenresAssociation(BaseDatetimeStamped):
+class MoviesGenresAssociation(Base, DatetimeStampedMixin, ActiveMixin):
     """Postgres модель-связка - Фильм и Жанр."""
 
     __tablename__ = "movies_genres_association"
@@ -134,8 +186,15 @@ class MoviesGenresAssociation(BaseDatetimeStamped):
         primary_key=True,
     )
 
-    movie: Mapped["Movies"] = relationship(backref="movie_genre_association")
-    genre: Mapped["Genres"] = relationship(backref="movie_genre_association")
+    movie: Mapped["Movies"] = relationship(
+        back_populates="movie_genre_association",
+        lazy="joined",
+    )
+
+    genre: Mapped["Genres"] = relationship(
+        back_populates="movie_genre_association",
+        lazy="joined",
+    )
 
     def __repr__(self) -> str:
         return f"MovieID={self.movie_id}, GenreID={self.genre_id}"

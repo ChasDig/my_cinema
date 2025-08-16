@@ -1,7 +1,7 @@
 from asyncio import Queue
 from typing import Any
 
-from core import config
+from core.app_config import config
 
 
 class Storage:

@@ -22,29 +22,27 @@ class Base(DeclarativeBase):
 
 class DatetimeStampedMixin:
     """
-    Postgres mixin - время создания, обновления записи и удаления записи
-    (мягкое удаление).
+    Postgres mixin - время создания, обновления записи.
     """
 
-    created_at: datetime = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         doc="Дата и время создания объекта",
     )
-    updated_at: datetime = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
         doc="Дата и время обновления объекта",
     )
-    deleted_at: datetime = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-        doc="Дата и время мягкого удаления объекта",
+
+
+class ActiveMixin:
+    """Postgres mixin - определяет активность записи."""
+
+    is_active: Mapped[bool] = mapped_column(
+        default=True,
+        nullable=False,
+        doc="Флаг - активна или нет запись",
     )
-
-
-class BaseDatetimeStamped(Base, DatetimeStampedMixin):
-    """Postgres модель - Base + DatetimeStampedMixin."""
-
-    pass

@@ -1,27 +1,32 @@
 from datetime import datetime
+from typing import Generic, Mapping, Type
 
-from core import logger
+from core.app_logger import logger
 from database import pg_session_factory
 from models.pg_models import ETLReferenceTimestamp, Movies
+from producers.base import BaseRule
+from producers.prducer_type_hints import PDModelsT, PGModelsT
+from producers.producer_rules import MoviesRules
+from pydantic import BaseModel
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils import ETLComponent, storage
 from utils.custom_exception import ProduceException
 
-from .prducer_type_hints import ModelsByRuleT, PGModelsT, ProduceRuleResultT
-from .producer_rules import MoviesRules
 
-
-class CinemaProducer(ETLComponent):
+class CinemaProducer(ETLComponent, Generic[PGModelsT, PDModelsT]):
     """Producer для Cinema Service."""
 
     def __init__(self) -> None:
         self.pg_session: AsyncSession | None = None
 
     @property
-    def models_by_rules(self) -> ModelsByRuleT:
+    def models_by_rules(self) -> Mapping[
+        Type[PGModelsT],
+        Type[BaseRule[BaseModel]],
+    ]:
         return {
-            Movies: MoviesRules.produce_rule,
+            Movies: MoviesRules,
         }
 
     async def run(self) -> None:
@@ -35,7 +40,7 @@ class CinemaProducer(ETLComponent):
             self.pg_session = pg_session
 
             try:
-                for model, rules in self.models_by_rules.items():
+                for model, rule_cls in self.models_by_rules.items():
                     model_name = model.model_name()
 
                     etl_ref_ts = await self._etl_ref_timestamp(model_name)
@@ -43,7 +48,10 @@ class CinemaProducer(ETLComponent):
                         etl_ref_ts.reference_timestamp if etl_ref_ts else None
                     )
 
-                    if select_data := await rules(pg_session, ref_timestamp):
+                    if select_data := await rule_cls().run(
+                        pg_session,
+                        ref_timestamp,
+                    ):
                         await self._put_raw_data_in_storage(
                             model=model,
                             select_data=select_data,
@@ -100,15 +108,15 @@ class CinemaProducer(ETLComponent):
 
     @staticmethod
     async def _put_raw_data_in_storage(
-        model: PGModelsT,
-        select_data: ProduceRuleResultT,
+        model: Type[PGModelsT],
+        select_data: list[BaseModel],
     ) -> None:
         """
         Отправка сырых данных в Storage по указанной модели.
 
         @type model: PGModelsT
         @param model:
-        @type select_data: ProduceRuleResultT
+        @type select_data: list[BaseModel]
         @param select_data: Данные из выборки.
 
         @rtype: None
@@ -171,7 +179,7 @@ class CinemaProducer(ETLComponent):
 
     @staticmethod
     def _log_about_produce(
-        model: PGModelsT,
+        model: Type[PGModelsT],
         etl_ref_timestamp: ETLReferenceTimestamp | None,
         count_: int,
     ) -> None:

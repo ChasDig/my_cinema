@@ -1,4 +1,4 @@
-from .base import Base, BaseDatetimeStamped, DatetimeStampedMixin
+from .base import Base, DatetimeStampedMixin
 from .cinema_models import (
     Genres,
     Movies,
@@ -7,15 +7,15 @@ from .cinema_models import (
     Persons,
 )
 from .internal_models import ETLReferenceTimestamp
-from .pg_enums import person_type_enum
+from .pg_enums import PersonsAssociationEnum, person_type_enum
 from .schemas import Schemas
 
 __all__ = [
     "Base",
     "DatetimeStampedMixin",
-    "BaseDatetimeStamped",
     "Schemas",
     "person_type_enum",
+    "PersonsAssociationEnum",
     "Movies",
     "Persons",
     "Genres",

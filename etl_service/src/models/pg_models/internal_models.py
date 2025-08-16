@@ -22,7 +22,7 @@ class ETLReferenceTimestamp(Base):
         unique=True,
         doc="Наименование таблицы в БД",
     )
-    reference_timestamp: datetime = mapped_column(
+    reference_timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         doc="Референсная точка выборки",

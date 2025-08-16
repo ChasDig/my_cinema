@@ -1,7 +1,7 @@
 from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from core import config
+from core.app_config import config
 from producers import CinemaProducer
 from utils.abstract import ETLSchedulerInterface
 
