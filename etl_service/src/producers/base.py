@@ -9,6 +9,7 @@ PDModelsT = TypeVar("PDModelsT", bound=BaseModel)
 
 
 class BaseRule(ABC, Generic[PDModelsT]):
+    """Интерфейс для указания правил Producer."""
 
     @abstractmethod
     async def run(

@@ -114,7 +114,7 @@ class CinemaProducer(ETLComponent):
         """
         Отправка сырых данных в Storage по указанной модели.
 
-        @type model: PGModelsT
+        @type model: Type[PGModelsT]
         @param model:
         @type select_data: list[BaseModel]
         @param select_data: Данные из выборки.
