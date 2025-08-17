@@ -56,6 +56,8 @@ class CinemaProducer(ETLComponent):
                             model=model,
                             select_data=select_data,
                         )
+                        # TODO: обновлять после переноса данных в
+                        #  Elasticsearch(CinemaLoader)
                         new_etl_ref_timestamp = (
                             await self._update_or_create_etl_ref_timestamp(
                                 model_name,

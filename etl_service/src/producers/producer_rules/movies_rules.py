@@ -38,6 +38,17 @@ class MoviesRules(BaseRule[MoviesProducerModel]):
         pg_session: AsyncSession,
         ref_timestamp: datetime | None = None,
     ) -> list[MoviesProducerModel]:
+        """
+        Выборка данных по Movies и связанным сущностям: Persons, Genres.
+
+        @type pg_session: AsyncSession
+        @param pg_session:
+        @type ref_timestamp: datetime | None
+        @param ref_timestamp:
+
+        @rtype: list[MoviesProducerModel]
+        @return: movies_pm
+        """
         stmt = self._get_movie_stmt()
 
         if ref_timestamp:
@@ -93,7 +104,7 @@ class MoviesRules(BaseRule[MoviesProducerModel]):
                 ),
             )
             .order_by(
-                Movies.updated_at,
+                Movies.updated_at.asc(),
             )
             .limit(
                 config.etl_select_limit,
