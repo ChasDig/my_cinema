@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -6,6 +7,7 @@ from pydantic import BaseModel, Field
 class PersonsProducerModel(BaseModel):
     """Информация по Person (используется для Producer)."""
 
+    id_: UUID | str
     first_name: str
     last_name: str
     birthday: date
@@ -17,6 +19,7 @@ class PersonsProducerModel(BaseModel):
 class GenresProducerModel(BaseModel):
     """Информация по Genre (используется для Producer)."""
 
+    id_: UUID | str
     title: str
     age_rating: int
     description: str | None = Field(default=None)
@@ -32,6 +35,7 @@ class MoviesProducerModel(BaseModel):
     updated_at: datetime
 
     # Movies
+    id_: UUID | str
     name_ru: str
     release_date: date
     age_rating: int

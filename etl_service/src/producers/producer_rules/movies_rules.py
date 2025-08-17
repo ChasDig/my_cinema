@@ -22,8 +22,8 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.selectable import Select
 
 
-class MoviesRules(BaseRule[MoviesProducerModel]):
-    """Правило для выборки данных по Movies."""
+class MoviesProduceAndTransformRule(BaseRule[MoviesProducerModel]):
+    """Правило для выборки данных и форматированию для ES по Movies."""
 
     @staticmethod
     def _get_persons_gen(movie: Movies) -> Generator[Persons, Any, None]:
@@ -113,6 +113,7 @@ class MoviesRules(BaseRule[MoviesProducerModel]):
 
     def _create_movie_pm(self, movie: Movies) -> MoviesProducerModel:
         return MoviesProducerModel(
+            id_=movie.id,
             name_ru=movie.name_ru,
             name_eng=movie.name_eng,
             release_date=movie.release_date,
@@ -156,6 +157,7 @@ class MoviesRules(BaseRule[MoviesProducerModel]):
     @staticmethod
     def _create_person_pm(person: Persons) -> PersonsProducerModel:
         return PersonsProducerModel(
+            id_=person.id,
             first_name=person.first_name,
             second_name=person.second_name,
             last_name=person.last_name,
@@ -166,6 +168,7 @@ class MoviesRules(BaseRule[MoviesProducerModel]):
     @staticmethod
     def _create_genre_pm(genre: Genres) -> GenresProducerModel:
         return GenresProducerModel(
+            id_=genre.id,
             title=genre.title,
             age_rating=genre.age_rating,
             description=genre.description,

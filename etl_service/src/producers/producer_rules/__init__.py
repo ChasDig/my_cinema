@@ -1,3 +1,3 @@
-from .movies_rules import MoviesRules
+from .movies_rules import MoviesProduceAndTransformRule
 
-__all__ = ["MoviesRules"]
+__all__ = ["MoviesProduceAndTransformRule"]
