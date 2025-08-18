@@ -8,12 +8,9 @@ class PersonsProducerModel(BaseModel):
     """Информация по Person (используется для Producer)."""
 
     id_: UUID | str
-    first_name: str
-    last_name: str
+    full_name: str
     birthday: date
-
-    second_name: str | None = Field(default=None)
-    place_of_birth: str | None = Field(default=None)
+    place_of_birth: str = Field(default="")
 
 
 class GenresProducerModel(BaseModel):
@@ -22,7 +19,7 @@ class GenresProducerModel(BaseModel):
     id_: UUID | str
     title: str
     age_rating: int
-    description: str | None = Field(default=None)
+    description: str = Field(default="")
 
 
 class MoviesProducerModel(BaseModel):
@@ -33,23 +30,27 @@ class MoviesProducerModel(BaseModel):
 
     # Meta:
     updated_at: datetime
+    created_at: datetime
 
     # Movies
     id_: UUID | str
     name_ru: str
     release_date: date
     age_rating: int
-    name_eng: str | None = Field(default=None)
+    name_eng: str = Field(default="")
     rating: float = Field(default=0.0)
+    description: str = Field(default="")
 
     # Persons
-    actors_name: list[str] = Field(default_factory=list)
-    producers_name: list[str] = Field(default_factory=list)
-    directors_name: list[str] = Field(default_factory=list)
+    actors_name: str
+    producers_name: str
+    directors_name: str
 
-    persons: list[PersonsProducerModel] = Field(default_factory=list)
+    actors: list[PersonsProducerModel] = Field(default_factory=list)
+    producers: list[PersonsProducerModel] = Field(default_factory=list)
+    directors: list[PersonsProducerModel] = Field(default_factory=list)
 
     # Genres
-    genres_title: list[str] = Field(default_factory=list)
+    genres_title: str
 
     genres: list[GenresProducerModel] = Field(default_factory=list)

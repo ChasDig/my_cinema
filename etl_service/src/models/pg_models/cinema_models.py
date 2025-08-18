@@ -36,6 +36,7 @@ class Movies(Base, DatetimeStampedMixin, ActiveMixin):
         nullable=False,
         doc="Возрастной рейтинг (ограничение)",
     )
+    description: Mapped[str] = mapped_column(default="", doc="Описание")
 
     movie_person_ass: Mapped[list["MoviesPersonsAssociation"]] = relationship(
         back_populates="movie",
@@ -95,7 +96,7 @@ class Persons(Base, DatetimeStampedMixin, ActiveMixin):
         "movie",
     )
 
-    def get_person_name(self) -> str:
+    def get_full_name(self) -> str:
         if self.second_name:
             return f"{self.first_name} {self.second_name} {self.last_name}"
 

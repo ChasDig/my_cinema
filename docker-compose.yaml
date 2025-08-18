@@ -73,10 +73,39 @@ services:
     networks:
       - sec_network
 
+  elasticsearch:
+    image: elasticsearch:8.6.2
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      - ES_LOG_LEVEL=ERROR
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - http.port=${ELASTIC_PORT}
+      - ELASTIC_USERNAME=${ELASTIC_USERNAME}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    expose:
+      - "${ELASTIC_PORT}"
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "curl -s -k -u ${ELASTIC_USERNAME}:${ELASTIC_PASSWORD} ${ELASTIC_SCHEME}://localhost:${ELASTIC_PORT}/_cluster/health | grep -q '\"status\":\"green\"' || exit 1"
+      ]
+      interval: 3s
+      retries: 3
+      start_period: 120s
+      timeout: 3s
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - sec_network
+
 volumes:
   pg_db_data:
   redis_db_data:
+  es_data:
 
 networks:
   sec_network:
     driver: bridge
+    internal: true

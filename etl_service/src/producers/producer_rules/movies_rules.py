@@ -119,28 +119,48 @@ class MoviesProduceAndTransformRule(BaseRule[MoviesProducerModel]):
             release_date=movie.release_date,
             age_rating=movie.age_rating,
             rating=movie.rating,
-            actors_name=self._get_persons_name_by_association(
-                persons=self._get_persons_gen(movie),
-                association=PersonsAssociationEnum.actor.name,
+            description=movie.description,
+            updated_at=movie.updated_at,
+            created_at=movie.created_at,
+            actors_name=", ".join(
+                self._get_persons_name_by_association(
+                    persons=self._get_persons_gen(movie),
+                    association=PersonsAssociationEnum.actor.name,
+                )
             ),
-            producers_name=self._get_persons_name_by_association(
-                persons=self._get_persons_gen(movie),
-                association=PersonsAssociationEnum.producer.name,
+            producers_name=", ".join(
+                self._get_persons_name_by_association(
+                    persons=self._get_persons_gen(movie),
+                    association=PersonsAssociationEnum.producer.name,
+                )
             ),
-            directors_name=self._get_persons_name_by_association(
-                persons=self._get_persons_gen(movie),
-                association=PersonsAssociationEnum.director.name,
+            directors_name=", ".join(
+                self._get_persons_name_by_association(
+                    persons=self._get_persons_gen(movie),
+                    association=PersonsAssociationEnum.director.name,
+                )
             ),
-            persons=[
-                self._create_person_pm(p) for p in self._get_persons_gen(movie)
-            ],  # noqa: E501
-            genres_title=[
-                genre.title for genre in self._get_genres_gen(movie)
-            ],  # noqa: E501
+            actors=[
+                self._create_person_pm(p)
+                for p in self._get_persons_gen(movie)
+                if p.type_employment == PersonsAssociationEnum.actor.name
+            ],
+            producers=[
+                self._create_person_pm(p)
+                for p in self._get_persons_gen(movie)
+                if p.type_employment == PersonsAssociationEnum.producer.name
+            ],
+            directors=[
+                self._create_person_pm(p)
+                for p in self._get_persons_gen(movie)
+                if p.type_employment == PersonsAssociationEnum.director.name
+            ],
+            genres_title=", ".join(
+                [genre.title for genre in self._get_genres_gen(movie)]
+            ),
             genres=[
                 self._create_genre_pm(g) for g in self._get_genres_gen(movie)
             ],  # noqa: E501
-            updated_at=movie.updated_at,
         )
 
     @staticmethod
@@ -149,7 +169,7 @@ class MoviesProduceAndTransformRule(BaseRule[MoviesProducerModel]):
         persons: Generator[Persons, Any, None],
     ) -> list[str]:
         return [
-            person.get_person_name()
+            person.get_full_name()
             for person in persons
             if person.type_employment == association
         ]
@@ -158,9 +178,7 @@ class MoviesProduceAndTransformRule(BaseRule[MoviesProducerModel]):
     def _create_person_pm(person: Persons) -> PersonsProducerModel:
         return PersonsProducerModel(
             id_=person.id,
-            first_name=person.first_name,
-            second_name=person.second_name,
-            last_name=person.last_name,
+            full_name=person.get_full_name(),
             birthday=person.birthday,
             place_of_birth=person.place_of_birth,
         )

@@ -3,9 +3,9 @@ from typing import Mapping, Type
 
 from core.app_logger import logger
 from database import pg_session_factory
-from loaders.base import BaseLoad
-from loaders.loader_rules import MoviesLoaderRule
+from database.es_client import ESContextManager, es_indexes_mapping_checker
 from models.pg_models import ETLReferenceTimestamp, Movies
+from models.pydantic_models import MoviesProducerModel
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import SQLAlchemyError
@@ -18,14 +18,14 @@ class CinemaLoader:
     """Loader для Cinema Service."""
 
     @property
-    def models_by_rules(self) -> Mapping[
-        Type[PGModelsT],
-        Type[BaseLoad[BaseModel]],
-    ]:
+    def pg_models_by_es_models(
+        self,
+    ) -> Mapping[Type[PGModelsT], Type[BaseModel]]:
         return {
-            Movies: MoviesLoaderRule,
+            Movies: MoviesProducerModel,
         }
 
+    @es_indexes_mapping_checker
     async def run(self) -> None:
         """
         Запуск ETL-компонента - Loader.
@@ -33,39 +33,44 @@ class CinemaLoader:
         @rtype: None
         @return:
         """
-        for model, rule_cls in self.models_by_rules.items():
-            etl_ref_timestamp = list()
-            rule_cls_init = rule_cls()
-            model_name = model.model_name()
-            queue_by_type = storage.formatted_queue_by_type(type_=model_name)
+        async with ESContextManager() as es_client:  # type: ignore
+            for pg_model, es_model in self.pg_models_by_es_models.items():
+                etl_ref_timestamp = list()
+                model_name = pg_model.model_name()
+                queue_by_type = storage.formatted_queue_by_type(model_name)
 
-            while True:
-                formatted_data = await queue_by_type.get()
+                while True:
+                    formatted_data = await queue_by_type.get()
 
-                try:
-                    if formatted_data is None:
-                        break
+                    try:
+                        if formatted_data is None:
+                            break
 
-                    await rule_cls_init.run(formatted_data=formatted_data)
-                    etl_ref_timestamp.append(formatted_data.updated_at)
+                        fd_id = getattr(formatted_data, "id_", None)
+                        await es_client.insert_document(
+                            index_=model_name,
+                            document=formatted_data.dict(),
+                            id_=fd_id,
+                        )
+                        etl_ref_timestamp.append(formatted_data.updated_at)
 
-                except LoadException as ex:
-                    logger.error(
-                        f"[!] Error Load data for {model_name}"
-                        f"(ID={getattr(formatted_data, 'id_', '-')}): {ex}"
+                    except LoadException as ex:
+                        logger.error(
+                            f"[!] Error Load data for '{model_name}'"
+                            f"(ID={fd_id}): {ex}"
+                        )
+
+                    finally:
+                        queue_by_type.task_done()
+
+                if etl_ref_timestamp:
+                    await self._update_or_create_etl_ref_timestamp(
+                        model_name=model_name,
+                        etl_ref_timestamp=max(etl_ref_timestamp),
                     )
 
-                finally:
-                    queue_by_type.task_done()
-
-            if etl_ref_timestamp:
-                await self._update_or_create_etl_ref_timestamp(
-                    model_name=model_name,
-                    etl_ref_timestamp=max(etl_ref_timestamp),
-                )
-
-            await queue_by_type.join()
-            logger.info(f"[*] {model_name} was load...")
+                await queue_by_type.join()
+                logger.info(f"[*] '{model_name}' was load...")
 
     @staticmethod
     async def _update_or_create_etl_ref_timestamp(

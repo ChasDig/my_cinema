@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from dotenv import find_dotenv
 from pydantic import Field, computed_field
@@ -63,6 +64,35 @@ class DBSettings(BaseSettings):
             f"{self.pg_password}@{self.pg_host}:"
             f"{self.pg_port}/{self.pg_database}"
         )
+
+    _es_indexes_name: list[str] | None
+
+    # ES:
+    elastic_schema: str = Field(default="http", alias="ELASTIC_SCHEME")
+    elastic_name: str = Field(default="elastic", alias="ELASTIC_USERNAME")
+    elastic_host: str = Field(default="127.0.0.1", alias="ELASTIC_HOST")
+    elastic_port: int = Field(default=9200, alias="ELASTIC_PORT")
+    elastic_password: str = Field(alias="ELASTIC_PASSWORD")
+
+    @computed_field
+    @property
+    def es_indexes_name(self) -> list[str]:
+        if self._es_indexes_name is None:
+            current_dir = pathlib.Path(__file__).parent.parent
+            ind_dir = current_dir / "models" / "elasticsearch_indexes"
+
+            self._es_indexes_name = [
+                f.name
+                for f in pathlib.Path(ind_dir).glob("*.json")
+                if f.is_file()  # noqa: E501
+            ]
+
+        return self._es_indexes_name
+
+    @computed_field
+    @property
+    def elastic_url(self) -> str:
+        return f"{self.elastic_schema}://{self.elastic_host}:{self.elastic_port}/"  # noqa: E501
 
 
 class Settings(BaseSettings):
