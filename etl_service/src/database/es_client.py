@@ -27,6 +27,17 @@ class AsyncESClient:
         index_: str,
         body: dict[str, Any] | None = None,
     ) -> None:
+        """
+        Создание индекса к ES.
+
+        @type index_: str
+        @param index_:
+        @type body: dict[str, Any] | None
+        @param body:
+
+        @rtype: None
+        @return:
+        """
         if body:
             exists = await self._client.indices.exists(index=index_)
 
@@ -39,6 +50,19 @@ class AsyncESClient:
         document: dict[str, Any],
         id_: str | None,
     ) -> dict[str, bool]:
+        """
+        Создание/обновление документа.
+
+        @type index_: str
+        @param index_:
+        @type document: dict[str, Any]
+        @param document:
+        @type id_: str | None
+        @param id_:
+
+        @rtype: dict[str, bool]
+        @return result:
+        """
         result = {"status": True}
         response_ = await self._client.index(
             index=index_,
@@ -80,6 +104,16 @@ class ESContextManager:
 def es_indexes_mapping_checker(
     func: Callable[..., Awaitable[Any]],
 ) -> Callable[..., Awaitable[Any]]:
+    """
+    Декоратор, проверка наличия индексов в ES (создание при необходимости).
+
+    @type func: Callable[..., Awaitable[Any]]
+    @param func:
+
+    @rtype: Callable[..., Awaitable[Any]]
+    @return wrapper:
+    """
+
     @wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         async with ESContextManager() as es_client:
