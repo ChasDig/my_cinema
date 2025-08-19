@@ -65,7 +65,7 @@ class DBSettings(BaseSettings):
             f"{self.pg_port}/{self.pg_database}"
         )
 
-    _es_indexes_name: list[str] | None
+    es_indexes_path_: list[tuple[str, str]] | None = Field(default=None)
 
     # ES:
     elastic_schema: str = Field(default="http", alias="ELASTIC_SCHEME")
@@ -76,18 +76,18 @@ class DBSettings(BaseSettings):
 
     @computed_field
     @property
-    def es_indexes_name(self) -> list[str]:
-        if self._es_indexes_name is None:
+    def es_indexes_path(self) -> list[tuple[str, str]]:
+        if self.es_indexes_path_ is None:
             current_dir = pathlib.Path(__file__).parent.parent
             ind_dir = current_dir / "models" / "elasticsearch_indexes"
 
-            self._es_indexes_name = [
-                f.name
+            self.es_indexes_path_ = [
+                (str(ind_dir / f.name), f.name.split(".")[0])
                 for f in pathlib.Path(ind_dir).glob("*.json")
                 if f.is_file()  # noqa: E501
             ]
 
-        return self._es_indexes_name
+        return self.es_indexes_path_
 
     @computed_field
     @property
@@ -124,7 +124,7 @@ class Settings(BaseSettings):
         alias="ETL_CINEMA_TASK_INTERVAL_SEC",
     )
     etl_movies_select_limit: int = Field(
-        default=1 * 250,
+        default=1 * 500,
         alias="ETL_CINEMA_SELECT_LIMIT",
     )
 

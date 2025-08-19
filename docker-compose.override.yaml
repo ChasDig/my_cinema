@@ -2,14 +2,10 @@ services:
   pg_db:
     ports:
       - "${POSTGRES_PORT}:5432"
-    expose:
-      - "5432"
 
   redis_db:
     ports:
       - "${REDIS_PORT}:6379"
-    expose:
-      - "6379"
 
   elasticsearch:
     ports:

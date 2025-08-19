@@ -33,7 +33,7 @@ class CinemaLoader:
         @rtype: None
         @return:
         """
-        async with ESContextManager() as es_client:  # type: ignore
+        async with ESContextManager() as es_client:
             for pg_model, es_model in self.pg_models_by_es_models.items():
                 etl_ref_timestamp = list()
                 model_name = pg_model.model_name()

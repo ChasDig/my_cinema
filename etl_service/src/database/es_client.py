@@ -1,12 +1,11 @@
 import json
 from functools import wraps
-from typing import Any, Awaitable, Callable, TypeVar
+from json import JSONDecodeError
+from typing import Any, Awaitable, Callable
 
-from core.app_config import config, db_config
+from core.app_config import db_config
 from core.app_logger import logger
 from elasticsearch import AsyncElasticsearch
-
-ESClient_T = TypeVar("ESClient_T", bound="AsyncESClient")
 
 
 class AsyncESClient:
@@ -14,8 +13,8 @@ class AsyncESClient:
 
     def __init__(self) -> None:
         self._client: AsyncElasticsearch = AsyncElasticsearch(
-            config.elastic_url,
-            basic_auth=(config.elastic_name, config.elastic_password),
+            db_config.elastic_url,
+            basic_auth=(db_config.elastic_name, db_config.elastic_password),
             max_retries=0,
             retry_on_timeout=False,
         )
@@ -38,7 +37,7 @@ class AsyncESClient:
         self,
         index_: str,
         document: dict[str, Any],
-        id_: str,
+        id_: str | None,
     ) -> dict[str, bool]:
         result = {"status": True}
         response_ = await self._client.index(
@@ -84,9 +83,9 @@ def es_indexes_mapping_checker(
     @wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         async with ESContextManager() as es_client:
-            for index_name in db_config.es_indexes_name:
+            for index_path, index_name in db_config.es_indexes_path:
                 try:
-                    with open(index_name) as fp:
+                    with open(index_path) as fp:
                         await es_client.create_index_with_ignore(
                             body=json.load(fp),
                             index_=index_name,
@@ -94,8 +93,14 @@ def es_indexes_mapping_checker(
 
                 except FileNotFoundError:
                     logger.warning(
-                        f"[!] Index mapping '{index_name}' not found!"
+                        f"[!] Index mapping '{index_path}' not found!"
                         " Mapping not created..."
+                    )
+
+                except JSONDecodeError as ex:
+                    logger.warning(
+                        f"[!] Index mapping '{index_path}' not correct!"
+                        f" Mapping not created: {ex}"
                     )
 
         return await func(*args, **kwargs)

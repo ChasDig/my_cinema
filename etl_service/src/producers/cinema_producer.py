@@ -45,7 +45,7 @@ class CinemaProducer(ETLComponent):
                     model_name = model.model_name()
                     formatted_q = storage.formatted_queue_by_type(model_name)
 
-                    if await formatted_q.full():
+                    if formatted_q.full():
                         logger.warning(
                             f"[*] '{model_name}' full, model was not produce"
                         )

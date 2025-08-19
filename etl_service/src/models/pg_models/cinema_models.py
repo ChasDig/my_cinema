@@ -51,11 +51,11 @@ class Movies(Base, DatetimeStampedMixin, ActiveMixin):
     )
 
     persons = association_proxy(
-        "movie_person_association",
+        "movie_person_ass",
         "person",
     )
     genres = association_proxy(
-        "movie_genre_association",
+        "movie_genre_ass",
         "genre",
     )
 
@@ -92,7 +92,7 @@ class Persons(Base, DatetimeStampedMixin, ActiveMixin):
     )
 
     movies = association_proxy(
-        "movie_person_association",
+        "movie_person_ass",
         "movie",
     )
 
@@ -131,7 +131,7 @@ class Genres(Base, DatetimeStampedMixin, ActiveMixin):
     )
 
     movies = association_proxy(
-        "movie_genre_association",
+        "movie_genre_ass",
         "movie",
     )
 
@@ -157,12 +157,12 @@ class MoviesPersonsAssociation(Base, DatetimeStampedMixin, ActiveMixin):
     )
 
     movie: Mapped["Movies"] = relationship(
-        back_populates="movie_person_association",
+        back_populates="movie_person_ass",
         lazy="joined",
     )
 
     person: Mapped["Persons"] = relationship(
-        back_populates="movie_person_association",
+        back_populates="movie_person_ass",
         lazy="joined",
     )
 
@@ -188,12 +188,12 @@ class MoviesGenresAssociation(Base, DatetimeStampedMixin, ActiveMixin):
     )
 
     movie: Mapped["Movies"] = relationship(
-        back_populates="movie_genre_association",
+        back_populates="movie_genre_ass",
         lazy="joined",
     )
 
     genre: Mapped["Genres"] = relationship(
-        back_populates="movie_genre_association",
+        back_populates="movie_genre_ass",
         lazy="joined",
     )
 
