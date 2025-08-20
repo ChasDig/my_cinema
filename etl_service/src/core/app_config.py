@@ -65,14 +65,14 @@ class DBSettings(BaseSettings):
             f"{self.pg_port}/{self.pg_database}"
         )
 
-    es_indexes_path_: list[tuple[str, str]] | None = Field(default=None)
-
     # ES:
     elastic_schema: str = Field(default="http", alias="ELASTIC_SCHEME")
     elastic_name: str = Field(default="elastic", alias="ELASTIC_USERNAME")
     elastic_host: str = Field(default="127.0.0.1", alias="ELASTIC_HOST")
     elastic_port: int = Field(default=9200, alias="ELASTIC_PORT")
     elastic_password: str = Field(alias="ELASTIC_PASSWORD")
+
+    es_indexes_path_: list[tuple[str, str]] | None = Field(default=None)
 
     @computed_field
     @property
