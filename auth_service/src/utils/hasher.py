@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import os
 
-from core import crypto_config
+from core.app_config import crypto_config
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 

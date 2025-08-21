@@ -3,7 +3,6 @@ from typing import Any, AsyncGenerator
 
 from core.app_config import db_config
 from core.app_logger import logger
-from core.meta_classes import SingletonMeta
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import InterfaceError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
@@ -12,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from utils import SingletonMeta
 
 
 class AsyncSessionFactory(metaclass=SingletonMeta):
@@ -95,17 +95,3 @@ def create_sqlalchemy_async_engine(url: str | URL) -> AsyncEngine:
 
 async_engine_ = create_sqlalchemy_async_engine(url=URL_)
 pg_session_factory = AsyncSessionFactory(async_engine=async_engine_)
-
-
-async def get_pg_session() -> AsyncGenerator[AsyncSession, Any]:
-    """
-    Асинхронный генератор для получения активной сессии с Postgres.
-    Применение:
-    - Обертка для Dependency в FastAPI (раскрытие асинхронных генераторов,
-    аналогия - anext).
-
-    @rtype session: AsyncGenerator[AsyncSession, Any]
-    @return session:
-    """
-    async with pg_session_factory.context_session() as session:
-        yield session
