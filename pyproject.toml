@@ -5,7 +5,7 @@ disallow_untyped_defs = false
 disallow_incomplete_defs = false
 check_untyped_defs = false
 disable_error_code = "misc"
-exclude = ".*/alembic/.*$, .*/meta_classes\\.py$"
+exclude = "(.*alembic/.*$|.*meta_classes\\.py$|admin_service/cinema/migrations/.*$|admin_service/manage.py)"
 
 [tool.flake8]
 ignore = "E203"

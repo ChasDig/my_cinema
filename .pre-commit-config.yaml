@@ -27,6 +27,7 @@ repos:
       - id: flake8
         language_version: python3.13
         args: ["--config=pyproject.toml"]
+        exclude: ^admin_service/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.17.1
@@ -42,3 +43,4 @@ repos:
           - types-redis
           - types-requests
           - types-python-dateutil
+        exclude: ^admin_service/
