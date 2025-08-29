@@ -1,6 +1,5 @@
+from models.pg_models.base import Base, DatetimeStampedMixin, Schemas
 from sqlalchemy.orm import Mapped, mapped_column
-
-from .base import Base, DatetimeStampedMixin, Schemas
 
 
 class Users(Base, DatetimeStampedMixin):

@@ -26,7 +26,7 @@ class DBSettings(BaseSettings):
         default="auth_user",
         alias="AUTH_POSTGRES_USER",
     )
-    pg_password: str = Field(alias="AUTH_POSTGRES_PASSWORD")
+    pg_password: str = Field(default="pg_pass", alias="AUTH_POSTGRES_PASSWORD")
     pg_host: str = Field(default="127.0.0.1", alias="POSTGRES_HOST")
     pg_port: int = Field(default=5432, alias="POSTGRES_PORT")
 
@@ -65,7 +65,7 @@ class DBSettings(BaseSettings):
         )
 
     # RedisDB
-    redis_password: str = Field(alias="REDIS_PASSWORD")
+    redis_password: str = Field(default="redis_pass", alias="REDIS_PASSWORD")
     redis_auth_db: int = Field(default=0, alias="AUTH_REDIS_DB")
     redis_host: str = Field(default="127.0.0.1", alias="REDIS_HOST")
     redis_port: int = Field(default=6379, alias="REDIS_PORT")
@@ -89,7 +89,7 @@ class CryptoSettings(BaseSettings):
     salt_length_bytes: int = Field(default=16, alias="AUTH_SALT_BYTE_LENGTH")
     nonce_length_bytes: int = Field(default=12, alias="AUTH_NONCE_BYTE_LENGTH")
 
-    token_secret: str = Field(alias="AUTH_TOKEN_SECRET")
+    token_secret: str = Field(default="token_sec", alias="AUTH_TOKEN_SECRET")
     access_token_exp_min: int = Field(
         default=30,
         alias="AUTH_ACCESS_TOKEN_EXP_MIN",
@@ -104,7 +104,10 @@ class CryptoSettings(BaseSettings):
         default="$",
         alias="AUTH_PASSWORD_DELIMITER",
     )
-    email_master_password: str = Field(alias="AUTH_EMAIL_MASTER_PASSWORD")
+    email_master_password: str = Field(
+        default="email_master_password",
+        alias="AUTH_EMAIL_MASTER_PASSWORD",
+    )
 
 
 class Settings(BaseSettings):

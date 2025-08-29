@@ -36,6 +36,7 @@ ALLOWED_HOSTS = os.environ.get(
     "ADMIN_ALLOWED_HOSTS",
     ["localhost", "127.0.0.1"],
 )
+AUTH_USER_MODEL = "admin_app.AdminUser"
 
 
 # Application definition
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "cinema.apps.CinemaConfig",  # CinemaApp
+    "admin_app.apps.AdminAppConfig",  # AdminApp
 ]
 
 MIDDLEWARE = [
@@ -96,6 +98,9 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+INNER_AUTH_URLS = {
+    "create_user": "http://127.0.0.1:8000/auth/inner/employees/registration",  # TODO:
+}
 
 
 # Internationalization

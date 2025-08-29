@@ -32,3 +32,4 @@ class Schemas(enum.Enum):
     """Postgres схемы."""
 
     users = "users"
+    employees = "employees"

@@ -1,8 +1,8 @@
 from core.app_logger import logger
 from database.redis_client import RedisClient
 from fastapi import HTTPException, status
-from models.api_models import Tokens
-from models.pg_models import Users
+from models.api_models.external import Tokens
+from models.pg_models.external import Users
 from utils import Tokenizer
 from utils.custom_exception import RedisError
 

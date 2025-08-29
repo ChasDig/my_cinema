@@ -1,22 +1,22 @@
 from core.app_config import crypto_config
 from core.app_logger import logger
 from database.redis_client import RedisClient
-from models.api_models import (
+from models.api_models.external import (
     RequestUserLoginData,
     RequestUserRegistration,
     TokenPayload,
     Tokens,
 )
-from models.pg_models import Users
+from models.pg_models.external import Users
 from pydantic import EmailStr
 from sqlalchemy import or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils import Cryptor, Hasher, Tokenizer
 from utils.custom_exception import (
+    AlreadyExistsError,
+    NotFoundError,
     SQLAlchemyErrorCommit,
-    UserAlreadyExistsError,
-    UserNotFoundError,
 )
 from utils.mixins import TokensRefreshMixin
 
@@ -86,7 +86,7 @@ class UsersCreateBusinessModel:
             )
         )
         if query.scalar_one_or_none():
-            raise UserAlreadyExistsError()
+            raise AlreadyExistsError(entity=Users)
 
     def _create_new_user(self, data: RequestUserRegistration) -> Users:
         """
@@ -163,7 +163,7 @@ class UsersLoginBusinessModel(TokensRefreshMixin):
             email=login_data.email,
         )
         if not user:
-            raise UserNotFoundError()
+            raise NotFoundError(entity=Users)
 
         user_id = str(user.id)
         await self._check_password_by_hash(
@@ -235,9 +235,7 @@ class UsersLoginBusinessModel(TokensRefreshMixin):
             incoming_password=incoming_password,
             user_hash_password=user_hash_password,
         ):
-            raise UserNotFoundError(
-                detail="Not correct user email or password",
-            )
+            raise NotFoundError(detail="Not correct user email or password")
 
 
 class UsersRefreshBusinessModel(TokensRefreshMixin):
@@ -259,7 +257,7 @@ class UsersRefreshBusinessModel(TokensRefreshMixin):
         """
         user = await self._get_user_by_id(id_=refresh_token_payload.sub)
         if not user:
-            raise UserNotFoundError()
+            raise NotFoundError(entity=Users)
 
         user_id = str(user.id)
         user_agent = refresh_token_payload.user_agent

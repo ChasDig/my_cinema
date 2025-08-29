@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from businesses_models import (
+from businesses_models.external import (
     UsersCreateBusinessModel,
     UsersLoginBusinessModel,
     UsersRefreshBusinessModel,
@@ -9,7 +9,7 @@ from database import get_pg_session, get_redis_client
 from database.redis_client import RedisClient
 from depends import check_refresh_token, get_user_agent
 from fastapi import APIRouter, Body, Depends, Response, status
-from models.api_models import (
+from models.api_models.external import (
     RequestUserLoginData,
     RequestUserRegistration,
     TokenInfo,
@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"],
+    tags=["Users"],
 )
 
 
