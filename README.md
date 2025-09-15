@@ -76,6 +76,11 @@ pre-commit run black --all-files
 pre-commit clean
 ```
 
+5. Обхватить новые конфиги pre-commit
+```sh
+pre-commit install --overwrite
+```
+
 
 ## **Запуск проекта:**
 ### Перед запуском проекта:

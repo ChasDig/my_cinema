@@ -1,4 +1,5 @@
 from .base import Base
-from .users import Users
+from .external import Users
+from .inner import Employees
 
-__all__ = ["Base", "Users"]
+__all__ = ["Base", "Users", "Employees"]
