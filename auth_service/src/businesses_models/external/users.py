@@ -165,11 +165,12 @@ class UsersLoginBusinessModel(TokensRefreshMixin):
         if not user:
             raise NotFoundError(entity=Users)
 
-        user_id = str(user.id)
         await self._check_password_by_hash(
             incoming_password=login_data.password.get_secret_value(),
             user_hash_password=user.password_hash,
         )
+
+        user_id = str(user.id)
         await self._delete_tokens(
             user_id=user_id,
             redis_client=self._redis_client,
@@ -182,9 +183,10 @@ class UsersLoginBusinessModel(TokensRefreshMixin):
         )
         await self._insert_tokens(
             tokens=tokens,
-            user=user,
+            user_id=user_id,
             redis_client=self._redis_client,
             user_agent=self._user_agent,
+            user_email_hash=user.email_hash,
         )
 
         return tokens
@@ -214,28 +216,6 @@ class UsersLoginBusinessModel(TokensRefreshMixin):
 
         user: Users | None = query.scalar_one_or_none()
         return user
-
-    @staticmethod
-    async def _check_password_by_hash(
-        incoming_password: str,
-        user_hash_password: str,
-    ) -> None:
-        """
-        Проверка пароля в открытом виде на соответствие hash-паролю.
-
-        @type incoming_password: str
-        @param incoming_password: Пароль (в открытом виде).
-        @type user_hash_password: str
-        @param user_hash_password: Hash-пароль.
-
-        @rtype: None
-        @return:
-        """
-        if not Hasher.check_password_by_hash(
-            incoming_password=incoming_password,
-            user_hash_password=user_hash_password,
-        ):
-            raise NotFoundError(detail="Not correct user email or password")
 
 
 class UsersRefreshBusinessModel(TokensRefreshMixin):
@@ -270,9 +250,10 @@ class UsersRefreshBusinessModel(TokensRefreshMixin):
         tokens = Tokenizer.gen_tokens(user_id=user_id, user_agent=user_agent)
         await self._insert_tokens(
             tokens=tokens,
-            user=user,
+            user_id=user_id,
             redis_client=self._redis_client,
             user_agent=user_agent,
+            user_email_hash=user.email_hash,
         )
 
         return tokens

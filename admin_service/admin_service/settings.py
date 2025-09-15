@@ -98,8 +98,9 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-INNER_AUTH_URLS = {
-    "create_user": "http://127.0.0.1:8000/auth/inner/employees/registration",  # TODO:
+INNER_AUTH_URLS = {  # TODO:
+    "create_user": "http://127.0.0.1:8000/auth/inner/employees/registration",
+    "authenticate": "http://127.0.0.1:8000/auth/inner/employees/login",
 }
 
 
@@ -119,6 +120,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -129,3 +134,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 include(
     "components/databases.py",
 )
+AUTHENTICATION_BACKENDS = [
+    "admin_app.backends.ExternalUserAuthBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
-from .managers import ExternalUserManager
+from .managers import ExternalUserCreate
 
 
 class AdminUser(AbstractBaseUser, PermissionsMixin):
@@ -13,7 +13,7 @@ class AdminUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
-    objects = ExternalUserManager()
+    objects = ExternalUserCreate()
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = [

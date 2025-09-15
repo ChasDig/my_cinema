@@ -1,3 +1,6 @@
-from .employees import EmployeesCreateBusinessModel
+from .employees import (
+    EmployeesCreateBusinessModel,
+    EmployeesLoginBusinessModel,
+)
 
-__all__ = ["EmployeesCreateBusinessModel"]
+__all__ = ["EmployeesCreateBusinessModel", "EmployeesLoginBusinessModel"]

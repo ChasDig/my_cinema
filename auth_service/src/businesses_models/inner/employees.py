@@ -1,13 +1,23 @@
 from core.app_config import crypto_config
 from core.app_logger import logger
-from models.api_models.inner import RequestEmployeesRegistration
+from database.redis_client import RedisClient
+from models.api_models.external import Tokens
+from models.api_models.inner import (
+    RequestEmployeesLoginData,
+    RequestEmployeesRegistration,
+)
 from models.pg_models.inner import Employees
 from pydantic import EmailStr
 from sqlalchemy import or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils import Cryptor, Hasher
-from utils.custom_exception import AlreadyExistsError, SQLAlchemyErrorCommit
+from utils import Cryptor, Hasher, Tokenizer
+from utils.custom_exception import (
+    AlreadyExistsError,
+    NotFoundError,
+    SQLAlchemyErrorCommit,
+)
+from utils.mixins import TokensRefreshMixin
 
 
 class EmployeesCreateBusinessModel:
@@ -128,3 +138,91 @@ class EmployeesCreateBusinessModel:
         )
 
         return email_enc, email_hash
+
+
+class EmployeesLoginBusinessModel(TokensRefreshMixin):
+    """BusinessModel: авторизация сотрудника."""
+
+    def __init__(
+        self,
+        pg_session: AsyncSession,
+        redis_client: RedisClient,
+        user_agent: str,
+    ):
+        self._pg_session = pg_session
+        self._redis_client = redis_client
+        self._user_agent = user_agent
+
+    async def execute(
+        self,
+        login_data: RequestEmployeesLoginData,
+    ) -> tuple[str, Tokens]:
+        """
+        Точка входа в выполнение процесса - авторизация сотрудника.
+
+        @type login_data: RequestUserLoginData
+        @param login_data:
+
+        @rtype: tuple[str, Tokens]
+        @return:
+        """
+        employer = await self._get_employer_by_email(
+            email=login_data.email,
+        )
+        if not employer:
+            raise NotFoundError(entity=Employees)
+
+        await self._check_password_by_hash(
+            incoming_password=login_data.password.get_secret_value(),
+            user_hash_password=employer.password_hash,
+        )
+
+        employer_id = str(employer.id)
+        await self._delete_tokens(
+            user_id=employer_id,
+            redis_client=self._redis_client,
+            user_agent=self._user_agent,
+        )
+
+        tokens = Tokenizer.gen_tokens(
+            user_id=employer_id,
+            user_agent=self._user_agent,
+        )
+        await self._insert_tokens(
+            tokens=tokens,
+            user_id=employer_id,
+            redis_client=self._redis_client,
+            user_agent=self._user_agent,
+            user_email_hash=employer.email_hash,
+        )
+
+        return employer_id, tokens
+
+    async def _get_employer_by_email(
+        self,
+        email: str | EmailStr,
+    ) -> Employees | None:
+        """
+        Получение сотрудника по переданному email.
+
+        @type email: str | EmailStr
+        @param email:
+
+        @rtype: Employees | None
+        @return:
+        """
+        email_hash = Hasher.hash_str(
+            str_=email,
+            password=crypto_config.email_master_password,
+        )
+
+        query = await self._pg_session.execute(
+            select(
+                Employees,
+            ).where(
+                Employees.email_hash == email_hash,
+            )
+        )
+
+        employer: Employees | None = query.scalar_one_or_none()
+        return employer

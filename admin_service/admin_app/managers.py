@@ -1,14 +1,15 @@
 import logging
 
 import httpx
+from django.conf import settings
 from django.contrib.auth.models import BaseUserManager
-
-from admin_service.settings import INNER_AUTH_URLS
 
 logger = logging.getLogger(__name__)
 
 
-class ExternalUserManager(BaseUserManager):
+class ExternalUserCreate(BaseUserManager):
+    """Создание сотрудника через внутренний сервис."""
+
     def create_user(
         self,
         username: str,
@@ -18,7 +19,7 @@ class ExternalUserManager(BaseUserManager):
     ):
         with httpx.Client(timeout=10) as httpx_client:
             response = httpx_client.post(
-                url=INNER_AUTH_URLS["create_user"],
+                url=settings.INNER_AUTH_URLS["create_user"],
                 json={
                     "username": username,
                     "password": password,
