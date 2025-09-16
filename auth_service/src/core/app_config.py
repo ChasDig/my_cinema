@@ -130,6 +130,38 @@ class Settings(BaseSettings):
     def base_dir(self) -> str:
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+    # Middlewares
+    allow_origins_str: str = Field(
+        default="http://127.0.0.1,http://localhost",
+        alias="AUTH_ALLOW_ORIGINS",
+    )
+    allow_methods_str: str = Field(default="*,", alias="AUTH_ALLOW_METHODS")
+    allow_headers_str: str = Field(default="*,", alias="AUTH_ALLOW_HEADERS")
+    allowed_hosts_str: str = Field(
+        default="http://localhost:8000,",
+        alias="AUTH_ALLOW_HOSTS",
+    )
+
+    @computed_field
+    @property
+    def allow_origins(self) -> list[str]:
+        return self.allow_origins_str.split(",")
+
+    @computed_field
+    @property
+    def allow_methods(self) -> list[str]:
+        return self.allow_methods_str.split(",")
+
+    @computed_field
+    @property
+    def allow_headers(self) -> list[str]:
+        return self.allow_headers_str.split(",")
+
+    @computed_field
+    @property
+    def allowed_hosts(self) -> list[str]:
+        return self.allowed_hosts_str.split(",")
+
 
 config = Settings()
 db_config = DBSettings()

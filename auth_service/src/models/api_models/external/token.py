@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -16,6 +18,7 @@ class TokenInfo(BaseModel):
 
     type: str
     ttl: int
+    exp: datetime
     token: str
 
 

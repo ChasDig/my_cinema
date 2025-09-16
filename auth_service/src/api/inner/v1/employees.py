@@ -6,8 +6,7 @@ from businesses_models.inner import (
 )
 from database import get_pg_session, get_redis_client
 from database.redis_client import RedisClient
-from depends import get_user_agent
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, Body, Depends, Header, status
 from models.api_models.inner import (
     RequestEmployeesLoginData,
     RequestEmployeesRegistration,
@@ -53,14 +52,13 @@ async def registration(
 @router.post(
     "/login",
     status_code=status.HTTP_200_OK,
-    response_model=ResponseEmployeesLoginData,
 )
 async def login(
     login_data: Annotated[
         RequestEmployeesLoginData,
         Body(),
     ],
-    user_agent: str = Depends(get_user_agent),
+    user_agent: Annotated[str, Header()],
     pg_session: AsyncSession = Depends(get_pg_session),
     redis_client: RedisClient = Depends(get_redis_client),
 ) -> ResponseEmployeesLoginData:

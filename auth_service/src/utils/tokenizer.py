@@ -20,7 +20,7 @@ class Tokenizer:
         cls,
         type_: str,
         now_: datetime,
-        exp_: float,
+        exp_ts: float,
         sub: str,
         user_agent: str,
     ) -> str | Any:
@@ -44,7 +44,7 @@ class Tokenizer:
         payload = TokenPayload(
             type=type_,
             iat=now_.timestamp(),
-            exp=exp_,
+            exp=exp_ts,
             sub=sub,
             user_agent=user_agent,
         )
@@ -69,32 +69,36 @@ class Tokenizer:
         @return:
         """
         now_ = datetime.now(UTC)
-        access_exp = (
-            now_ + timedelta(minutes=crypto_config.access_token_exp_min)
-        ).timestamp()
-        refresh_exp = (
-            now_ + timedelta(days=crypto_config.refresh_token_exp_days)
-        ).timestamp()
+
+        minutes_ = crypto_config.access_token_exp_min
+        access_exp = now_ + timedelta(minutes=minutes_)
+        access_exp_ts = access_exp.timestamp()
+
+        days_ = crypto_config.refresh_token_exp_days
+        refresh_exp = now_ + timedelta(days=days_)
+        refresh_exp_ts = refresh_exp.timestamp()
 
         return Tokens(
             access_token=TokenInfo(
                 type=TokenType.access.name,
-                ttl=int(access_exp - now_.timestamp()),
+                ttl=int(access_exp_ts - now_.timestamp()),
+                exp=access_exp,
                 token=cls.gen_token(
                     type_=TokenType.access.name,
                     now_=now_,
-                    exp_=access_exp,
+                    exp_ts=access_exp_ts,
                     sub=user_id,
                     user_agent=user_agent,
                 ),
             ),
             refresh_token=TokenInfo(
                 type=TokenType.refresh.name,
-                ttl=int(refresh_exp - now_.timestamp()),
+                ttl=int(refresh_exp_ts - now_.timestamp()),
+                exp=refresh_exp,
                 token=cls.gen_token(
                     type_=TokenType.refresh.name,
                     now_=now_,
-                    exp_=refresh_exp,
+                    exp_ts=refresh_exp_ts,
                     sub=user_id,
                     user_agent=user_agent,
                 ),

@@ -7,8 +7,8 @@ from businesses_models.external import (
 )
 from database import get_pg_session, get_redis_client
 from database.redis_client import RedisClient
-from depends import check_refresh_token, get_user_agent
-from fastapi import APIRouter, Body, Depends, Response, status
+from depends import check_refresh_token
+from fastapi import APIRouter, Body, Depends, Header, Response, status
 from models.api_models.external import (
     RequestUserLoginData,
     RequestUserRegistration,
@@ -59,7 +59,6 @@ async def registration(
 @router.post(
     "/login",
     status_code=status.HTTP_200_OK,
-    response_model=TokenInfo,
 )
 async def login(
     login_data: Annotated[
@@ -67,7 +66,7 @@ async def login(
         Body(),
     ],
     response: Response,
-    user_agent: str = Depends(get_user_agent),
+    user_agent: Annotated[str, Header()],
     pg_session: AsyncSession = Depends(get_pg_session),
     redis_client: RedisClient = Depends(get_redis_client),
 ) -> TokenInfo:
@@ -98,11 +97,22 @@ async def login(
     tokens = await business_model.execute(login_data=login_data)
 
     response.set_cookie(
+        key=TokenType.access.name,
+        value=tokens.access_token.token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        expires=tokens.access_token.exp,
+        max_age=tokens.access_token.ttl,
+    )
+    response.set_cookie(
         key=TokenType.refresh.name,
         value=tokens.refresh_token.token,
         httponly=True,
         secure=True,
         samesite="strict",
+        expires=tokens.refresh_token.exp,
+        max_age=tokens.refresh_token.ttl,
     )
 
     return tokens.access_token
@@ -111,7 +121,6 @@ async def login(
 @router.post(
     "/refresh",
     status_code=status.HTTP_200_OK,
-    response_model=TokenInfo,
 )
 async def refresh(
     response: Response,
@@ -145,11 +154,22 @@ async def refresh(
     )
 
     response.set_cookie(
+        key=TokenType.access.name,
+        value=tokens.access_token.token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        expires=tokens.access_token.exp,
+        max_age=tokens.access_token.ttl,
+    )
+    response.set_cookie(
         key=TokenType.refresh.name,
         value=tokens.refresh_token.token,
         httponly=True,
         secure=True,
         samesite="strict",
+        expires=tokens.refresh_token.exp,
+        max_age=tokens.refresh_token.ttl,
     )
 
     return tokens.access_token

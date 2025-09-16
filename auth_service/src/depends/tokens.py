@@ -1,15 +1,16 @@
+from typing import Annotated
+
 from database.redis_client import RedisClient, get_redis_client
-from depends import get_user_agent
-from fastapi import Cookie, Depends, HTTPException, status
+from fastapi import Cookie, Depends, Header, HTTPException, status
 from models.api_models.external import TokenPayload
 from models.enums import TokenType
 from utils import Tokenizer
 
 
 async def check_refresh_token(
+    user_agent: Annotated[str, Header()],
     refresh_token: str = Cookie(None, alias=TokenType.refresh.name),
     redis_client: RedisClient = Depends(get_redis_client),
-    user_agent: str = Depends(get_user_agent),
 ) -> TokenPayload:
     """
     Проверка Refresh-токена.
