@@ -5,6 +5,11 @@ from database import redis_context_manager
 from websockets.legacy.server import WebSocketServerProtocol
 
 rooms_local: dict[str, set[WebSocketServerProtocol]] = {}
+# 1
+{"1": [1, 2]}
+
+# 2
+{"1": [3, 4]}
 
 
 class ChatRoomHandler:
@@ -19,8 +24,8 @@ class ChatRoomHandler:
         await self.register_ws_in_room()
 
         try:
-            async with redis_context_manager() as redis_client:
-                async for msg in self._ws:
+            async for msg in self._ws:
+                async with redis_context_manager() as redis_client:
                     encoded_msg = json.dumps(
                         {
                             "room_id": self._room_id,
