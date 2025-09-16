@@ -61,7 +61,7 @@ class ChatRoomBroadcaster:
         async with redis_context_manager() as redis_client:
             pubsub = redis_client.client.pubsub()
             await pubsub.subscribe(ChatRoomHandler.pub_sub_type)
-
+            # TODO: ttl, состояние гонки при разных инстансах
             async for msg in pubsub.listen():
                 if msg["type"] == "message":
                     ws_to_remove = list()
